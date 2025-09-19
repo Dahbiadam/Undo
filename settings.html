@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDO - Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Inter',sans-serif;background:#0f111a;color:#fff;display:flex;flex-direction:column;align-items:center;padding:2rem;}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;}
+.logo{font-weight:800;font-size:1.8rem;color:#fff;}
+.menu{display:flex;gap:1.5rem;}
+.menu-item{cursor:pointer;transition:0.3s;color:#ccc;}
+.menu-item:hover{color:#a776ff;}
+.menu-toggle{display:none;font-size:2rem;cursor:pointer;color:#6c63ff;}
+h1{margin-bottom:1rem;text-align:center;}
+.container{background:#1c1c2a;padding:2rem;border-radius:12px;width:100%;max-width:400px;box-shadow:0 0 20px rgba(0,0,0,0.5);}
+label{display:block;margin-top:1rem;font-weight:600;color:#ccc;}
+input[type="text"]{width:100%;padding:0.7rem;margin-top:0.3rem;border-radius:8px;border:none;background:#2a2a3c;color:#fff;}
+button{margin-top:1.5rem;width:100%;padding:0.8rem;border:none;border-radius:8px;background:linear-gradient(90deg,#6c63ff,#a776ff);color:#fff;font-weight:700;cursor:pointer;transition:0.3s;}
+button:hover{opacity:0.9;}
+
+@media(max-width:800px){
+  .menu{display:none;flex-direction:column;gap:1rem;}
+  .menu-toggle{display:block;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">UNDO</div>
+  <div class="menu-toggle" id="menuToggle">&#9776;</div>
+  <nav class="menu" id="menu">
+    <div class="menu-item" onclick="window.location.href='dashboard.html'">Dashboard</div>
+    <div class="menu-item" onclick="window.location.href='breathing.html'">Breathing</div>
+    <div class="menu-item" onclick="window.location.href='analytics.html'">Analytics</div>
+    <div class="menu-item" onclick="window.location.href='settings.html'">Settings</div>
+  </nav>
+</header>
+
+<h1>Settings</h1>
+<div class="container">
+  <label>Username</label>
+  <input type="text" id="username" disabled>
+
+  <label>Addiction</label>
+  <input type="text" id="addiction" disabled>
+
+  <label>Goal (days)</label>
+  <input type="text" id="goal" disabled>
+
+  <label>Current Streak</label>
+  <input type="text" id="streak" disabled>
+
+  <button id="logoutBtn">Logout</button>
+</div>
+
+<script>
+// Toggle menu for mobile
+const menuToggle = document.getElementById('menuToggle');
+const menu = document.getElementById('menu');
+menuToggle.addEventListener('click', ()=>{
+  menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+});
+
+// Load user data
+const user = JSON.parse(localStorage.getItem('user'));
+if(!user){ window.location.href='onboarding.html'; }
+
+const users = JSON.parse(localStorage.getItem('users')||'{}');
+const currentUser = users[user.username];
+
+document.getElementById('username').value = user.username;
+document.getElementById('addiction').value = currentUser.addiction;
+document.getElementById('goal').value = currentUser.goal || 30;
+document.getElementById('streak').value = currentUser.streak || 0;
+
+// Logout
+document.getElementById('logoutBtn').addEventListener('click',()=>{
+  localStorage.removeItem('user');
+  window.location.href='onboarding.html';
+});
+</script>
+
+</body>
+</html>

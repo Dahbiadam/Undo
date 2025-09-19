@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDO - Premium Breathing</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif;}
+body{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:2rem;background:#0f111a;color:#fff;}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;}
+.logo{font-weight:800;font-size:2rem;color:#6C63FF;text-shadow:0 0 10px rgba(108,99,255,0.4);}
+.menu{display:flex;gap:1rem;}
+.menu-item{cursor:pointer;transition:0.3s;}
+.menu-item:hover{color:#a776ff;}
+h1{text-align:center;font-size:2.5rem;margin-bottom:0.5rem;text-shadow:0 0 10px rgba(255,255,255,0.2);}
+p{text-align:center;color:#bbb;margin-bottom:2rem;font-size:1.2rem;}
+.exercise-selector{display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center;}
+.exercise-selector button{padding:.6rem 1.5rem;font-size:1rem;font-weight:600;border:none;border-radius:30px;cursor:pointer;background:#1c1f2a;color:#fff;box-shadow:0 4px 15px rgba(0,0,0,0.3);transition:.3s;}
+.exercise-selector button.active{background:#6C63FF;box-shadow:0 6px 20px rgba(108,99,255,0.5);}
+.big-circle{width:220px;height:220px;border-radius:50%;margin-bottom:2rem;display:flex;justify-content:center;align-items:center;position:relative;background:#1c1f2a;box-shadow:0 0 40px rgba(108,99,255,0.3);border:6px solid rgba(255,255,255,0.2);overflow:hidden;}
+.circle-text{position:absolute;font-size:1.5rem;font-weight:700;color:#fff;text-shadow:0 0 10px rgba(255,255,255,0.2);text-align:center;}
+.wave{position:absolute;bottom:0;width:200%;height:200%;border-radius:50%;opacity:0.5;transform:translateY(100%);}
+.wave1{background:linear-gradient(135deg,#6C63FF,#a776ff);animation:waveMove 6s infinite linear;}
+.wave2{background:linear-gradient(135deg,#3ea0ff,#6c63ff);opacity:0.4;animation:waveMove 8s infinite linear reverse;}
+.wave3{background:linear-gradient(135deg,#3d7eff,#9d7fff);opacity:0.3;animation:waveMove 10s infinite linear;}
+@keyframes waveMove{
+  0%{transform:translateX(0) translateY(var(--waveY,100%)) scale(var(--waveScale,1)) rotate(0deg);}
+  50%{transform:translateX(-50%) translateY(var(--waveY,100%)) scale(var(--waveScale,1)) rotate(180deg);}
+  100%{transform:translateX(0) translateY(var(--waveY,100%)) scale(var(--waveScale,1)) rotate(360deg);}
+}
+#startBtn,#stopBtn{padding:.8rem 2rem;font-size:1.1rem;font-weight:600;border:none;border-radius:30px;cursor:pointer;color:#fff;box-shadow:0 5px 20px rgba(108,99,255,0.4);transition:.3s;margin-bottom:1rem;}
+#startBtn{background:#6C63FF;}
+#startBtn:hover{background:#584ddb;box-shadow:0 6px 25px rgba(108,99,255,0.6);}
+#stopBtn{background:#ff4d4f;}
+#stopBtn:hover{background:#d63c3f;box-shadow:0 6px 25px rgba(255,77,79,0.6);}
+.timer{font-size:1.5rem;margin-top:1rem;font-weight:700;color:#e0e0e0;text-shadow:0 0 10px rgba(255,255,255,0.1);}
+@media(max-width:500px){.big-circle{width:180px;height:180px;}.circle-text{font-size:1.2rem;}#startBtn,#stopBtn{width:100%;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">UNDO</div>
+  <nav class="menu">
+    <div class="menu-item" onclick="window.location.href='dashboard.html'">Dashboard</div>
+    <div class="menu-item" onclick="window.location.href='breathing.html'">Breathing</div>
+    <div class="menu-item" onclick="window.location.href='analytics.html'">Analytics</div>
+    <div class="menu-item" onclick="window.location.href='achievements.html'">Achievements</div>
+    <div class="menu-item" onclick="window.location.href='settings.html'">Settings</div>  </nav>
+</header>
+
+<h1>Breathing Exercise</h1>
+<p>Select an exercise and start your guided session.</p>
+
+<div class="exercise-selector">
+  <button data-ex="wimhof" class="active">Wim Hof</button>
+  <button data-ex="box">Box Breathing</button>
+  <button data-ex="478">4-7-8</button>
+</div>
+
+<div class="big-circle" id="breathingCircle">
+  <div class="circle-text" id="circleText">Ready</div>
+  <div class="wave wave1" id="wave1"></div>
+  <div class="wave wave2" id="wave2"></div>
+  <div class="wave wave3" id="wave3"></div>
+</div>
+
+<button id="startBtn">Start Breathing</button>
+<button id="stopBtn">Stop</button>
+<div class="timer" id="timer">00:00</div>
+
+<script>
+const exercises={wimhof:[4,4,4],box:[4,4,4,4],'478':[4,7,8]};
+const phaseLabels=['Inhale','Hold','Exhale','Hold'];
+let currentExercise='wimhof', startTime=null, totalSeconds=0, requestId=null;
+
+const startBtn=document.getElementById('startBtn');
+const stopBtn=document.getElementById('stopBtn');
+const circleText=document.getElementById('circleText');
+const timerDisplay=document.getElementById('timer');
+const buttons=document.querySelectorAll('.exercise-selector button');
+const wave1=document.getElementById('wave1');
+const wave2=document.getElementById('wave2');
+const wave3=document.getElementById('wave3');
+
+let maxSession = parseInt(localStorage.getItem('maxSession') || '0');
+let achievements = JSON.parse(localStorage.getItem('achievements') || '[]');
+
+buttons.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    buttons.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentExercise=btn.dataset.ex;
+    resetSession();
+  });
+});
+
+function resetSession(){
+  cancelAnimationFrame(requestId);
+  startTime=null;
+  totalSeconds=0;
+  timerDisplay.textContent='00:00';
+  circleText.textContent='Ready';
+  wave1.style.setProperty('--waveY','100%'); wave2.style.setProperty('--waveY','100%'); wave3.style.setProperty('--waveY','100%');
+  wave1.style.setProperty('--waveScale','1'); wave2.style.setProperty('--waveScale','1'); wave3.style.setProperty('--waveScale','1');
+  startBtn.disabled=false;
+}
+
+// Animate waves according to breathing pattern
+function animateBreathing(timestamp){
+  if(!startTime) startTime=timestamp;
+  const elapsed=(timestamp-startTime)/1000;
+  totalSeconds=Math.floor(elapsed);
+  timerDisplay.textContent=String(Math.floor(totalSeconds/60)).padStart(2,'0')+":"+String(totalSeconds%60).padStart(2,'0');
+
+  const pattern=exercises[currentExercise];
+  const cycleTime=pattern.reduce((a,b)=>a+b,0);
+  let timeInCycle=elapsed%cycleTime;
+
+  let phase=0,sum=0;
+  for(let i=0;i<pattern.length;i++){
+    sum+=pattern[i];
+    if(timeInCycle<=sum){phase=i;break;}
+  }
+  circleText.textContent=phaseLabels[phase]||'';
+
+  let phaseStart=sum-pattern[phase];
+  let progress=(timeInCycle-phaseStart)/pattern[phase];
+
+  let waveLevel=0, waveScale=1;
+  let grad1='#6C63FF', grad2='#a776ff', grad3='#3ea0ff';
+  if(phase===0){ // inhale
+    waveLevel=100-(progress*40);
+    waveScale=1+progress*0.15;
+    grad1='#3ea0ff'; grad2='#6C63FF'; grad3='#a776ff';
+  } else if(phase===2){ // exhale
+    waveLevel=60+(progress*40);
+    waveScale=1.15-progress*0.15;
+    grad1='#6C63FF'; grad2='#a776ff'; grad3='#3ea0ff';
+  } else{
+    waveLevel=60; waveScale=1;
+  }
+
+  wave1.style.setProperty('--waveY',waveLevel+'%'); wave1.style.setProperty('--waveScale',waveScale); wave1.style.background=`linear-gradient(135deg,${grad1},${grad2})`;
+  wave2.style.setProperty('--waveY',waveLevel+'%'); wave2.style.setProperty('--waveScale',waveScale); wave2.style.background=`linear-gradient(135deg,${grad2},${grad3})`;
+  wave3.style.setProperty('--waveY',waveLevel+'%'); wave3.style.setProperty('--waveScale',waveScale); wave3.style.background=`linear-gradient(135deg,${grad3},${grad1})`;
+
+  requestId=requestAnimationFrame(animateBreathing);
+}
+
+startBtn.addEventListener('click',()=>{
+  startBtn.disabled=true;
+  requestId=requestAnimationFrame(animateBreathing);
+});
+
+stopBtn.addEventListener('click',()=>{
+  cancelAnimationFrame(requestId);
+  // Save achievement automatically if new max
+  if(totalSeconds>maxSession){
+    maxSession=totalSeconds;
+    localStorage.setItem('maxSession',maxSession);
+    achievements.push({
+      message:`New Achievement! Longest Breathing: ${Math.floor(maxSession/60)}m ${maxSession%60}s`,
+      seconds:totalSeconds,
+      date:new Date().toLocaleString()
+    });
+    localStorage.setItem('achievements',JSON.stringify(achievements));
+    alert(`New Achievement saved! Longest Breathing: ${Math.floor(maxSession/60)}m ${maxSession%60}s`);
+  }
+  resetSession();
+});
+</script>
+
+</body>
+</html>

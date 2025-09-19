@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDO - Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif;}
+body{background:#0f111a;color:#fff;display:flex;flex-direction:column;align-items:center;padding:2rem;min-height:100vh;}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;}
+.logo{font-weight:800;font-size:1.8rem;color:#fff;}
+.menu{display:flex;gap:1.5rem;}
+.menu-item{cursor:pointer;transition:0.3s;color:#ccc;}
+.menu-item:hover{color:#a776ff;}
+.menu-toggle{display:none;font-size:2rem;cursor:pointer;color:#6c63ff;}
+h1{font-size:2rem;margin-bottom:0.5rem;text-align:center;}
+h2{font-size:1.2rem;color:#ccc;margin-bottom:1rem;text-align:center;}
+.countdown-label{font-size:1rem;color:#ccc;margin-bottom:0.3rem;text-align:center;}
+.countdown{font-size:2rem;margin-bottom:2rem;text-align:center;font-weight:700;color:#6c63ff;}
+
+/* Week streak tracker */
+.week-container{display:flex;justify-content:center;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;}
+.day{display:flex;flex-direction:column;align-items:center;position:relative;}
+.day-name{margin-top:0.5rem;color:#bbb;}
+.day-circle{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:#222;color:#ccc;position:relative;overflow:hidden;transition:0.3s, transform 0.5s;}
+.day-circle.completed{color:#fff;box-shadow:0 0 12px rgba(255,255,255,0.7);}
+.day-circle.animate{transform: scale(1.3);}
+.badge{position:absolute;top:-12px;right:-12px;width:22px;height:22px;border-radius:50%;background:gold;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:bold;color:#0f111a;opacity:0;transform:scale(0);animation:pop 0.5s forwards;}
+@keyframes pop{0%{opacity:0;transform:scale(0);}50%{opacity:1;transform:scale(1.5);}100%{opacity:1;transform:scale(1);} }
+
+/* Big circle */
+.big-circle{width:200px;height:200px;border-radius:50%;margin-bottom:2rem;position:relative;background:#fff;color:#0f111a;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(255,255,255,0.5);font-weight:700;font-size:1.2rem;text-align:center;transition:transform 1s, background 1s;}
+
+/* Icons */
+.icons{display:flex;gap:2rem;margin-bottom:2rem;}
+.icon{display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:0.3s;}
+.icon svg{width:70px;height:70px;margin-bottom:0.3rem;fill:#fff;transition:0.3s;}
+.icon:hover svg{transform:scale(1.1);}
+.icon-name{font-size:1rem;color:#ccc;}
+
+/* Progress bar */
+.progress-container{width:80%;height:30px;background:#222;border-radius:15px;margin-bottom:0.3rem;overflow:hidden;position:relative;}
+.progress-fill{height:100%;width:2%;background:linear-gradient(90deg,#6c63ff,#a776ff);border-radius:15px;position:absolute;top:0;left:0;overflow:hidden;transition:width 1s;}
+.progress-text{color:#6c63ff;font-weight:600;position:absolute;left:5px;top:-30px;}
+.progress-label{color:#fff;text-align:center;margin-top:0.2rem;font-size:0.9rem;}
+
+.quote-frame{border:2px solid #6c63ff;padding:1rem;margin-top:1rem;border-radius:10px;width:80%;max-width:500px;text-align:center;font-style:italic;color:#ccc;font-size:1rem;}
+
+/* Panic button */
+#panicBtn{background:red;color:white;font-size:1.2rem;padding:1rem 2rem;border:none;border-radius:10px;cursor:pointer;box-shadow:0 0 10px rgba(255,0,0,0.7);transition:0.3s;}
+#panicOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:black;color:white;display:none;flex;align-items:center;justify-content:center;flex-direction:column;z-index:9999;text-align:center;}
+
+@media(max-width:800px){
+  .menu{display:none;flex-direction:column;gap:1rem;}
+  .menu-toggle{display:block;}
+  .week-container{gap:0.5rem;}
+  .day-circle{width:35px;height:35px;font-size:1rem;}
+  .big-circle{width:150px;height:150px;font-size:1rem;}
+  .icon svg{width:50px;height:50px;}
+  .progress-container{height:20px;}
+  .quote-frame{width:90%;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">UNDO</div>
+  <div class="menu-toggle" id="menuToggle">&#9776;</div>
+  <nav class="menu" id="menu">
+    <div class="menu-item" onclick="window.location.href='dashboard.html'">Dashboard</div>
+    <div class="menu-item" onclick="window.location.href='breathing.html'">Breathing</div>
+    <div class="menu-item" onclick="window.location.href='analytics.html'">Analytics</div>
+    <div class="menu-item" onclick="window.location.href='achievements.html'">Achievements</div>
+    <div class="menu-item" onclick="window.location.href='settings.html'">Settings</div>  </nav>
+</header>
+
+<h1 id="welcomeMsg">Welcome, User</h1>
+<h2 id="goalMsg">Goal Progress</h2>
+
+<div class="big-circle" id="bigCircle">Beginner</div>
+
+<div class="countdown-label">You've been free of your addiction for:</div>
+<div class="countdown" id="countdown">0d : 0h : 0m : 0s</div>
+
+<div class="week-container" id="weekContainer">
+  <div class="day"><div class="day-circle" data-day="0"></div><div class="day-name">M</div></div>
+  <div class="day"><div class="day-circle" data-day="1"></div><div class="day-name">T</div></div>
+  <div class="day"><div class="day-circle" data-day="2"></div><div class="day-name">W</div></div>
+  <div class="day"><div class="day-circle" data-day="3"></div><div class="day-name">T</div></div>
+  <div class="day"><div class="day-circle" data-day="4"></div><div class="day-name">F</div></div>
+  <div class="day"><div class="day-circle" data-day="5"></div><div class="day-name">S</div></div>
+  <div class="day"><div class="day-circle" data-day="6"></div><div class="day-name">S</div></div>
+</div>
+
+<div class="icons">
+  <div class="icon" id="meditate">
+    <svg viewBox="0 0 24 24"><path d="M12 2C10 2 8 4 8 6s2 4 4 4 4-2 4-4-2-4-4-4zm0 6c-1.1 0-2-1-2-2s.9-2 2-2 2 1 2 2-.9 2-2 2zm-4 8c0-2.2 3.3-4 4-4s4 1.8 4 4v2H8v-2z"/></svg>
+    <div class="icon-name">Meditate</div>
+  </div>
+  <div class="icon" id="reset">
+    <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+    <div class="icon-name">Reset</div>
+  </div>
+</div>
+
+<div class="progress-container">
+  <div class="progress-text" id="progressText">0%</div>
+  <div class="progress-fill" id="progressBar"></div>
+</div>
+<div class="progress-label">Brain Renewal Progress</div>
+
+<div class="quote-frame" id="dailyQuote">“Your journey to freedom starts today.”</div>
+
+<div style="margin:2rem 0;">
+  <button id="panicBtn">Panic Button</button>
+</div>
+
+<div id="panicOverlay">
+  <h1 style="color:red;font-size:3rem;margin-bottom:1rem;">STOP!</h1>
+  <p style="font-size:1.5rem;margin-bottom:2rem;">Take a deep breath and regain control.</p>
+  <button onclick="endPanic()" style="
+    background:white;color:black;padding:1rem 2rem;border:none;border-radius:10px;font-size:1.2rem;
+    cursor:pointer;">Back to Recovery</button>
+</div>
+
+<script>
+// MENU TOGGLE
+document.getElementById('menuToggle').addEventListener('click', ()=>{
+  const menu = document.getElementById('menu');
+  menu.style.display = menu.style.display==='flex'?'none':'flex';
+});
+
+// USER DATA
+const loggedUser = JSON.parse(localStorage.getItem('user'));
+if(!loggedUser){ window.location.href='onboarding.html'; }
+const users = JSON.parse(localStorage.getItem('users')||'{}');
+const currentUser = users[loggedUser.username] || {goal:30, daysCompleted:[false,false,false,false,false,false,false], startTime: new Date().getTime()};
+
+// WEEK STREAK
+const dayCircles = document.querySelectorAll('.day-circle');
+function updateWeekStreak(){
+  dayCircles.forEach((c,i)=>{
+    c.innerHTML='';
+    if(currentUser.daysCompleted[i]){
+      c.classList.add('completed');
+      c.textContent='+';
+      c.classList.add('animate');
+      confetti({particleCount: 30, spread: 70, origin: { y: 0.6 }});
+      setTimeout(()=>c.classList.remove('animate'),500);
+    }else{
+      c.classList.remove('completed');
+      c.textContent='-';
+    }
+  });
+}
+updateWeekStreak();
+
+// COUNTDOWN
+const countdownEl = document.getElementById('countdown');
+const bigCircle = document.getElementById('bigCircle');
+let startTime = currentUser.startTime;
+
+function updateCountdown(){
+  const now = new Date().getTime();
+  const diff = now - startTime;
+  const days = Math.floor(diff/(1000*60*60*24));
+  const hours = Math.floor(diff/(1000*60*60)%24);
+  const minutes = Math.floor(diff/(1000*60)%60);
+  const seconds = Math.floor(diff/1000%60);
+  countdownEl.textContent = `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
+
+  const progress = Math.min((days/currentUser.goal)*100,100);
+  if(progress<30) bigCircle.textContent='Beginner';
+  else if(progress<60) bigCircle.textContent='Intermediate';
+  else bigCircle.textContent='Advanced';
+  bigCircle.style.transform = `scale(${0.9 + progress/200})`;
+
+  const progressBar = document.getElementById('progressBar');
+  progressBar.style.width = progress<1?'5%':progress+'%';
+  document.getElementById('progressText').textContent = Math.floor(progress)+'%';
+}
+setInterval(updateCountdown,1000);
+updateCountdown();
+
+// ICONS
+document.getElementById('meditate').addEventListener('click', ()=> window.location.href='breathing.html');
+document.getElementById('reset').addEventListener('click', ()=>{
+  startTime = new Date().getTime();
+  currentUser.startTime = startTime;
+  users[loggedUser.username] = currentUser;
+  localStorage.setItem('users', JSON.stringify(users));
+  updateCountdown();
+});
+
+// PANIC BUTTON
+const panicBtn = document.getElementById('panicBtn');
+const panicOverlay = document.getElementById('panicOverlay');
+panicBtn.addEventListener('click', async ()=>{
+  panicOverlay.style.display = 'flex';
+  if(navigator.vibrate){ navigator.vibrate([200,100,200,100,400]); }
+  const audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+  audio.play();
+});
+function endPanic(){
+  panicOverlay.style.display = 'none';
+  document.body.style.backgroundColor = '#0f111a';
+}
+</script>
+</body>
+</html>

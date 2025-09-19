@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDO - Onboarding</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif;}
+body{background:#0f111a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;padding:2rem;}
+h1{margin-bottom:1rem;text-align:center;}
+.container{background:#1c1c2a;padding:2rem;border-radius:12px;width:100%;max-width:400px;box-shadow:0 0 20px rgba(0,0,0,0.5);}
+label{display:block;margin-top:1rem;font-weight:600;color:#ccc;}
+input[type="text"],input[type="password"],select{width:100%;padding:0.7rem;margin-top:0.3rem;border-radius:8px;border:none;background:#2a2a3c;color:#fff;}
+button{margin-top:1.5rem;width:100%;padding:0.8rem;border:none;border-radius:8px;background:linear-gradient(90deg,#6c63ff,#a776ff);color:#fff;font-weight:700;cursor:pointer;transition:0.3s;}
+button:hover{opacity:0.9;}
+.toggle-link{margin-top:1rem;text-align:center;color:#6c63ff;cursor:pointer;}
+.error{color:#ff6c6c;margin-top:0.5rem;font-size:0.9rem;text-align:center;}
+.success{color:#6cff88;margin-top:0.5rem;font-size:0.9rem;text-align:center;}
+</style>
+</head>
+<body>
+
+<h1>Welcome to UNDO</h1>
+<div class="container">
+  <div id="signupForm">
+    <label>Username</label>
+    <input type="text" id="signupUsername" placeholder="Enter username">
+    <label>Password</label>
+    <input type="password" id="signupPassword" placeholder="Enter password">
+    <label>What do you want to quit?</label>
+    <select id="addictionSelect">
+      <option value="Smoking">Smoking</option>
+      <option value="Scrolling">Scrolling</option>
+      <option value="Sugar">Sugar</option>
+      <option value="Other">Other</option>
+    </select>
+    <button id="signupBtn">Sign Up</button>
+    <div class="error" id="signupError"></div>
+    <div class="success" id="signupSuccess"></div>
+    <div class="toggle-link" id="toLogin">Already have an account? Log In</div>
+  </div>
+
+  <div id="loginForm" style="display:none;">
+    <label>Username</label>
+    <input type="text" id="loginUsername" placeholder="Enter username">
+    <label>Password</label>
+    <input type="password" id="loginPassword" placeholder="Enter password">
+    <button id="loginBtn">Log In</button>
+    <div class="error" id="loginError"></div>
+    <div class="success" id="loginSuccess"></div>
+    <div class="toggle-link" id="toSignup">Don't have an account? Sign Up</div>
+  </div>
+</div>
+
+<script>
+// ===== Simple Encryption Helper (for demo only) =====
+function encrypt(text){return btoa(text);} // Base64 encode
+function decrypt(text){return atob(text);} 
+
+// ===== Toggle Forms =====
+const signupForm=document.getElementById('signupForm');
+const loginForm=document.getElementById('loginForm');
+document.getElementById('toLogin').onclick=()=>{signupForm.style.display='none';loginForm.style.display='block';}
+document.getElementById('toSignup').onclick=()=>{signupForm.style.display='block';loginForm.style.display='none';}
+
+// ===== Sign Up =====
+document.getElementById('signupBtn').addEventListener('click',()=>{
+  const username=document.getElementById('signupUsername').value.trim();
+  const password=document.getElementById('signupPassword').value;
+  const addiction=document.getElementById('addictionSelect').value;
+  const error=document.getElementById('signupError');
+  const success=document.getElementById('signupSuccess');
+  error.textContent=''; success.textContent='';
+  if(!username||!password){error.textContent='Please fill all fields'; return;}
+  
+  let users=JSON.parse(localStorage.getItem('users')||'{}');
+  if(users[username]){error.textContent='Username already exists'; return;}
+  
+  users[username]={password:encrypt(password),addiction:addiction,streak:0,goal:30,lastReset:Date.now()};
+  localStorage.setItem('users',JSON.stringify(users));
+  success.textContent='Sign up successful! You can log in now.';
+  document.getElementById('signupUsername').value='';document.getElementById('signupPassword').value='';
+});
+
+// ===== Log In =====
+document.getElementById('loginBtn').addEventListener('click',()=>{
+  const username=document.getElementById('loginUsername').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const error=document.getElementById('loginError');
+  const success=document.getElementById('loginSuccess');
+  error.textContent=''; success.textContent='';
+  if(!username||!password){error.textContent='Please fill all fields'; return;}
+  
+  let users=JSON.parse(localStorage.getItem('users')||'{}');
+  if(!users[username]||decrypt(users[username].password)!==password){error.textContent='Invalid username or password'; return;}
+  
+  // Save current user securely
+  localStorage.setItem('user',JSON.stringify({username:username}));
+  success.textContent='Login successful! Redirecting...';
+  setTimeout(()=>{window.location.href='dashboard.html';},1000);
+});
+</script>
+
+</body>
+</html>
