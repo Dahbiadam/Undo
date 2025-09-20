@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDO - Achievements</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+:root {
+  --bg: #0f111a;
+  --text: #fff;
+  --accent: #6c63ff;
+  --card-bg: #111;
+  --menu-bg: #0f111a;
+  --menu-text: #fff;
+}
+:root.light {
+  --bg: #f9f9f9;
+  --text: #222;
+  --accent: #00c896;
+  --card-bg: #eee;
+  --menu-bg: #eee;
+  --menu-text: #222;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;padding:2rem;min-height:100vh;transition:0.4s;}
+h1{text-align:center;margin-bottom:1rem;}
+.container{width:90%;max-width:600px;}
+.achievements-list{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.achievement-card{background:var(--card-bg);border-radius:10px;padding:1rem;cursor:pointer;transition:transform 0.3s, box-shadow 0.3s, background 0.4s, color 0.4s;outline:none;}
+.achievement-card:hover{transform:scale(1.05);box-shadow:0 0 15px var(--accent)88;}
+.error{margin-top:1rem;text-align:center;color:#ccc;font-style:italic;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:0.8rem 1.2rem;border-radius:8px;opacity:0;pointer-events:none;transition:opacity 0.3s, background 0.4s;}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;}
+.logo{font-size:1.8rem;font-weight:700;color:var(--accent);}
+.menu-toggle{font-size:2rem;cursor:pointer;display:none;color:var(--menu-text);}
+nav.menu{display:flex;gap:1rem;align-items:center;transition:0.4s;}
+.menu-item{cursor:pointer;padding:0.5rem 1rem;border-radius:8px;color:var(--menu-text);transition:0.3s,color 0.4s;}
+.menu-item:hover{background:rgba(255,255,255,0.1);}
+@media(max-width:768px){
+  .menu-toggle{display:block;}
+  nav.menu{position:fixed;top:0;right:-260px;flex-direction:column;width:240px;height:100vh;padding:4rem 1.5rem;background:var(--menu-bg);gap:1.2rem;opacity:0;pointer-events:none;}
+  nav.menu.active{right:0;opacity:1;pointer-events:auto;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">UNDO</div>
+  <div class="menu-toggle" id="menuToggle">&#9776;</div>
+  <nav class="menu" id="menu">
+    <div class="menu-item" onclick="window.location.href='dashboard.html'">Dashboard</div>
+    <div class="menu-item" onclick="window.location.href='breathing.html'">Breathing</div>
+    <div class="menu-item" onclick="window.location.href='analytics.html'">Analytics</div>
+    <div class="menu-item" onclick="window.location.href='achievements.html'">Achievements</div>
+    <div class="menu-item" onclick="window.location.href='settings.html'">Settings</div>
+    <div class="menu-item" id="themeToggle">🌞</div>
+  </nav>
+</header>
+
+<h1>Achievements</h1>
+<div class="container">
+  <div class="achievements-list" id="achievementsList" role="list" aria-label="Achievements list"></div>
+  <div class="error" id="emptyMsg">No achievements yet. Practice breathing to earn your first one!</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ===== MENU TOGGLE =====
+const menuToggle = document.getElementById('menuToggle');
+const menu = document.getElementById('menu');
+menuToggle.addEventListener('click',()=>menu.classList.toggle('active'));
+
+// ===== TOAST =====
+function showToast(message){
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.style.opacity='1';
+  setTimeout(()=>{toast.style.opacity='0';},2000);
+}
+
+// ===== DEMO ACHIEVEMENTS =====
+const achievements = [
+  {message:'First Breath', seconds:120, date:new Date().toLocaleString()},
+  {message:'5-Minute Session', seconds:300, date:new Date().toLocaleString()},
+  {message:'10-Minute Master', seconds:600, date:new Date().toLocaleString()}
+];
+
+const list = document.getElementById('achievementsList');
+const empty = document.getElementById('emptyMsg');
+list.innerHTML='';
+
+if(!achievements || achievements.length===0){
+  empty.style.display='';
+}else{
+  empty.style.display='none';
+  const frag = document.createDocumentFragment();
+  achievements.forEach(a=>{
+    const card = document.createElement('div');
+    card.className='achievement-card';
+    card.setAttribute('role','listitem');
+    card.tabIndex=0;
+
+    const title = document.createElement('strong');
+    title.textContent = a.message;
+    card.appendChild(title);
+
+    const dur = document.createElement('div');
+    dur.textContent = `Duration: ${Math.floor(a.seconds/60)}m ${a.seconds%60}s`;
+    card.appendChild(dur);
+
+    const dt = document.createElement('div');
+    dt.textContent = `Date: ${a.date}`;
+    card.appendChild(dt);
+
+    card.addEventListener('click', ()=>{
+      showToast(`${a.message} — ${Math.floor(a.seconds/60)}m ${a.seconds%60}s`);
+      confetti({particleCount:30, spread:100, origin:{y:0.5}});
+    });
+
+    frag.appendChild(card);
+  });
+  list.appendChild(frag);
+}
+
+// ===== DARK/LIGHT MODE =====
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('theme');
+if(savedTheme==='light'){document.documentElement.classList.add('light');themeToggle.textContent='🌙';}
+else{document.documentElement.classList.remove('light');themeToggle.textContent='🌞';}
+themeToggle.addEventListener('click',()=>{
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('theme',isLight?'light':'dark');
+  themeToggle.textContent = isLight?'🌙':'🌞';
+});
+</script>
+</body>
+</html>

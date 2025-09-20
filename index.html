@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>UNDO</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div style="margin-top:20vh;text-align:center;color:#ddd">Redirecting…</div>
+
+  <script type="module">
+    import { verifySession } from './js/auth.js';
+    try {
+      const user = verifySession();
+      if (!user) location.href = './onboarding.html';
+      else location.href = './dashboard.html';
+    } catch (e) {
+      console.warn('redirect error', e);
+      location.href = './onboarding.html';
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(console.error);
+    }
+  </script>
+</body>
+</html>

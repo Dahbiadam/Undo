@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDO - Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+/* ===== BASE ===== */
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+body { background:#0d0d0d; color:#f5f5f5; display:flex; flex-direction:column; align-items:center; padding:1.5rem; min-height:100vh; transition: background 0.4s, color 0.4s; }
+h1,h2 { text-align:center; margin:0.5rem 0; }
+
+/* ===== HEADER ===== */
+header { width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; position:relative; z-index:1000; flex-wrap:wrap; }
+.logo { font-size:1.5rem; font-weight:700; color:#00c896; }
+.menu-toggle { font-size:2rem; cursor:pointer; display:none; color:#f5f5f5; z-index:1001; transition: transform 0.3s, color 0.3s; }
+.menu-toggle:active { transform:scale(1.2) rotate(20deg); }
+
+/* ===== MENU ===== */
+nav.menu { display:flex; gap:1rem; align-items:center; transition:right 0.4s ease, opacity 0.3s ease; }
+.menu-item { cursor:pointer; padding:0.6rem 1rem; border-radius:8px; background:transparent; transition: background 0.3s, transform 0.2s; }
+.menu-item:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+
+/* ===== MOBILE MENU (DRAWER) ===== */
+@media (max-width: 768px) {
+  .menu-toggle { display:block; }
+  nav.menu { flex-direction:column; gap:1.2rem; background:#111; position:fixed; top:0; right:-260px; width:240px; height:100vh; padding:4rem 1.5rem; box-shadow:-4px 0 20px rgba(0,0,0,0.6); opacity:0; pointer-events:none; }
+  nav.menu.active { right:0; opacity:1; pointer-events:auto; }
+}
+
+/* ===== BIG CIRCLE ===== */
+@keyframes pulse { 0%,100% { box-shadow: 0 0 15px #00c89680; transform: scale(1); } 50% { box-shadow: 0 0 25px #00c896aa; transform: scale(1.05); } }
+.big-circle { width:140px; height:140px; border-radius:50%; background:#00c896; display:flex; justify-content:center; align-items:center; color:#0d0d0d; font-weight:700; font-size:1.1rem; margin:1.5rem 0; transition:transform 0.3s, background 0.4s, color 0.4s; animation: pulse 2s infinite; cursor:pointer; }
+.big-circle:hover { transform: scale(1.08); box-shadow: 0 0 35px #00c896cc, 0 0 15px #00c89688 inset; transition: transform 0.3s, box-shadow 0.3s; }
+
+/* ===== COUNTDOWN ===== */
+.countdown-label { margin-top:0.5rem; font-size:0.9rem; opacity:0.8; }
+.countdown { font-size:1.2rem; font-weight:600; margin:0.5rem 0 1rem; }
+
+/* ===== WEEK TRACKER ===== */
+@keyframes glow { 0%,100% { box-shadow: 0 0 5px #00c89680; transform: scale(1); } 50% { box-shadow: 0 0 12px #00c896aa; transform: scale(1.1); } }
+.week-container { display:flex; justify-content:center; gap:1rem; margin:1rem 0; flex-wrap:wrap; }
+.day { text-align:center; font-size:0.75rem; }
+.day-circle { width:32px; height:32px; border-radius:50%; border:2px solid #555; margin:0 auto; display:flex; justify-content:center; align-items:center; transition:0.3s, transform 0.3s; cursor:pointer; }
+.day-circle.completed { background:#00c896; color:#0d0d0d; border-color:#00c896; font-weight:bold; animation: glow 1.5s infinite; }
+.day-circle:hover:not(.completed) { transform: scale(1.15); border-color: #00c896; transition: transform 0.3s, border-color 0.3s; }
+.day-label { margin-top:2px; color:#ccc; font-size:0.7rem; }
+
+/* ===== ICONS ===== */
+.icons { display:flex; justify-content:center; gap:2rem; margin:1.5rem 0; }
+.icon { display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+.icon svg { width:36px; height:36px; fill:#f5f5f5; margin-bottom:0.3rem; }
+.icon-name { font-size:0.9rem; }
+
+/* ===== PROGRESS ===== */
+.progress-container { width:80%; max-width:400px; height:16px; background:#222; border-radius:8px; margin:1rem auto; position:relative; }
+.progress-fill { height:100%; width:0%; background:#00c896; border-radius:8px; transition:width 0.4s; }
+.progress-text { position:absolute; top:-25px; right:0; font-size:0.9rem; }
+
+/* ===== QUOTE ===== */
+.quote-frame { margin:2rem auto; padding:1rem; border-left:4px solid #00c896; font-style:italic; opacity:0.9; max-width:500px; text-align:center; }
+
+/* ===== PANIC ===== */
+#panicBtn { background:red; border:none; padding:1rem 2rem; border-radius:10px; color:white; font-weight:bold; cursor:pointer; transition:0.3s; }
+#panicBtn:hover { background:darkred; }
+#panicOverlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:999; text-align:center; }
+
+/* ===== FOOTER ===== */
+.footer { margin-top:auto; text-align:center; font-size:0.9rem; opacity:0.7; padding:1rem 0; }
+
+/* ===== DARK/LIGHT TOGGLE ===== */
+#themeToggle { cursor:pointer; font-size:1.5rem; transition: transform 0.5s, text-shadow 0.4s; display:flex; align-items:center; justify-content:center; }
+#themeToggle.animate { transform: rotate(360deg) scale(1.3); text-shadow: 0 0 8px #fff, 0 0 12px #00c896; }
+
+/* ===== LIGHT THEME ===== */
+:root.light body { background:#f9f9f9; color:#222; }
+:root.light .big-circle { background:#222; color:#fff; }
+:root.light .day-circle { border-color:#bbb; }
+:root.light .day-circle.completed { background:#222; color:#fff; border-color:#222; animation: glow 1.5s infinite; }
+:root.light nav.menu { background:#eee; }
+:root.light .menu-toggle { color:#222; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">UNDO</div>
+  <div class="menu-toggle" id="menuToggle">&#9776;</div>
+  <nav class="menu" id="menu">
+    <div class="menu-item" onclick="window.location.href='dashboard.html'">Dashboard</div>
+    <div class="menu-item" onclick="window.location.href='breathing.html'">Breathing</div>
+    <div class="menu-item" onclick="window.location.href='analytics.html'">Analytics</div>
+    <div class="menu-item" onclick="window.location.href='achievements.html'">Achievements</div>
+    <div class="menu-item" onclick="window.location.href='settings.html'">Settings</div>
+    <div class="menu-item" id="themeToggle">🌞</div>
+  </nav>
+</header>
+
+<h1 id="welcomeMsg">Welcome, User</h1>
+<h2 id="goalMsg">Goal Progress</h2>
+
+<div class="big-circle" id="bigCircle">Beginner</div>
+
+<div class="countdown-label">You've been free of your addiction for:</div>
+<div class="countdown" id="countdown">0d : 0h : 0m : 0s</div>
+
+<div class="week-container" id="weekContainer">
+  <div class="day"><div class="day-circle" data-day="0"></div><div class="day-label">B1</div></div>
+  <div class="day"><div class="day-circle" data-day="1"></div><div class="day-label">B2</div></div>
+  <div class="day"><div class="day-circle" data-day="2"></div><div class="day-label">B3</div></div>
+  <div class="day"><div class="day-circle" data-day="3"></div><div class="day-label">B4</div></div>
+  <div class="day"><div class="day-circle" data-day="4"></div><div class="day-label">B5</div></div>
+  <div class="day"><div class="day-circle" data-day="5"></div><div class="day-label">B6</div></div>
+  <div class="day"><div class="day-circle" data-day="6"></div><div class="day-label">B7</div></div>
+</div>
+
+<div class="icons">
+  <div class="icon" id="meditate">
+    <svg viewBox="0 0 24 24"><path d="M12 2C10 2 8 4 8 6s2 4 4 4 4-2 4-4-2-4-4-4zm0 6c-1.1 0-2-1-2-2s.9-2 2-2 2 1 2 2-.9 2-2 2zm-4 8c0-2.2 3.3-4 4-4s4 1.8 4 4v2H8v-2z"/></svg>
+    <div class="icon-name">Meditate</div>
+  </div>
+  <div class="icon" id="reset">
+    <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+    <div class="icon-name">Reset</div>
+  </div>
+</div>
+
+<div class="progress-container">
+  <div class="progress-text" id="progressText">0%</div>
+  <div class="progress-fill" id="progressBar"></div>
+</div>
+
+<div class="quote-frame" id="dailyQuote">“Your journey to freedom starts today.”</div>
+
+<div style="margin:2rem 0;">
+  <button id="panicBtn">Panic Button</button>
+</div>
+
+<div id="panicOverlay">
+  <h1 style="color:red;font-size:3rem;margin-bottom:1rem;">STOP!</h1>
+  <p style="font-size:1.5rem;margin-bottom:2rem;">Take a deep breath and regain control.</p>
+  <button onclick="endPanic()" style="background:white;color:black;padding:1rem 2rem;border:none;border-radius:10px;font-size:1.2rem;cursor:pointer;">Back to Recovery</button>
+</div>
+
+<div class="footer">Made with ❤️ by Adam Dahbi (@adam.the.developer)</div>
+
+<script>
+// ===== MENU TOGGLE =====
+const menuToggle = document.getElementById('menuToggle');
+const menu = document.getElementById('menu');
+menuToggle.addEventListener('click',()=>menu.classList.toggle('active'));
+
+// ===== USER DATA =====
+const loggedUser = JSON.parse(localStorage.getItem('user')) || {username:'guest'};
+const users = JSON.parse(localStorage.getItem('users')||'{}');
+const currentUser = users[loggedUser.username] || {goal:30, daysCompleted:[false,false,false,false,false,false,false], startTime:new Date().getTime()};
+
+// ===== CONFETTI =====
+const dayCircles = document.querySelectorAll('.day-circle');
+function confettiSparkle(x,y){
+  for(let i=0;i<3;i++){
+    confetti({particleCount:5, spread:60, startVelocity:Math.random()*30+20, origin:{x:x,y:y}, scalar:0.7, ticks:80});
+  }
+}
+
+// ===== WEEK STREAK =====
+function updateWeekStreak(){
+  dayCircles.forEach((c,i)=>{
+    if(currentUser.daysCompleted[i]){
+      if(!c.classList.contains('completed')){
+        c.classList.add('completed');
+        c.textContent='+';
+        confettiSparkle(0.5,0.5);
+      }
+    }else{
+      c.classList.remove('completed');
+      c.textContent='-';
+    }
+  });
+}
+updateWeekStreak();
+
+// ===== COUNTDOWN & BIG CIRCLE =====
+const countdownEl = document.getElementById('countdown');
+const bigCircle = document.getElementById('bigCircle');
+let startTime = currentUser.startTime;
+
+function updateCountdown(){
+  const now = new Date().getTime();
+  const diff = now-startTime;
+  const days = Math.floor(diff/(1000*60*60*24));
+  const hours = Math.floor(diff/(1000*60*60)%24);
+  const minutes = Math.floor(diff/(1000*60)%60);
+  const seconds = Math.floor(diff/1000%60);
+  countdownEl.textContent = `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
+
+  const progress = Math.min((days/currentUser.goal)*100,100);
+  let oldLevel = bigCircle.textContent;
+  if(progress<30) bigCircle.textContent='Beginner';
+  else if(progress<60) bigCircle.textContent='Intermediate';
+  else bigCircle.textContent='Advanced';
+  bigCircle.style.transform = `scale(${0.95 + progress/200})`;
+  if(oldLevel !== bigCircle.textContent){ confettiSparkle(0.5,0.5); }
+
+  const progressBar = document.getElementById('progressBar');
+  progressBar.style.width = progress<1?'5%':progress+'%';
+  document.getElementById('progressText').textContent = Math.floor(progress)+'%';
+}
+setInterval(updateCountdown,1000);
+updateCountdown();
+
+// ===== ICONS =====
+document.getElementById('meditate').addEventListener('click',()=>window.location.href='breathing.html');
+document.getElementById('reset').addEventListener('click',()=>{
+  startTime = new Date().getTime();
+  currentUser.startTime = startTime;
+  users[loggedUser.username] = currentUser;
+  localStorage.setItem('users',JSON.stringify(users));
+  updateCountdown();
+});
+
+// ===== PANIC BUTTON =====
+const panicBtn = document.getElementById('panicBtn');
+const panicOverlay = document.getElementById('panicOverlay');
+panicBtn.addEventListener('click',()=>{
+  panicOverlay.style.display='flex';
+  if(navigator.vibrate){ navigator.vibrate([200,100,200,100,400]); }
+  const audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+  audio.play();
+});
+function endPanic(){ panicOverlay.style.display='none'; document.body.style.backgroundColor=document.documentElement.classList.contains('light')?'#f9f9f9':'#0d0d0d'; }
+
+// ===== DARK/LIGHT TOGGLE WITH PERSISTENCE =====
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('theme');
+if(savedTheme==='light'){ document.documentElement.classList.add('light'); themeToggle.textContent='🌙'; }
+else{ themeToggle.textContent='🌞'; }
+
+themeToggle.addEventListener('click',()=>{
+  document.documentElement.classList.toggle('light');
+  const isLight = document.documentElement.classList.contains('light');
+  localStorage.setItem('theme', isLight?'light':'dark');
+  themeToggle.textContent = isLight?'🌙':'🌞';
+  themeToggle.classList.add('animate');
+  setTimeout(()=>themeToggle.classList.remove('animate'),500);
+});
+</script>
+
+</body>
+</html>

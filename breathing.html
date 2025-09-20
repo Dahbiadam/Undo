@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDO - Premium Breathing</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;transition:background 0.4s,color 0.4s;}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:2rem;background:#0f111a;color:#fff;}
+body.light{background:#f9f9f9;color:#111;}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;}
+.logo{font-weight:800;font-size:2rem;color:#6C63FF;text-shadow:0 0 10px rgba(108,99,255,0.4);}
+.menu{display:flex;gap:1rem;flex-wrap:wrap;}
+.menu-item{cursor:pointer;transition:0.3s;}
+.menu-item:hover{color:#a776ff;text-decoration:underline;}
+.theme-toggle{cursor:pointer;font-size:1.5rem;transition:0.3s,text-shadow 0.5s;}
+.theme-toggle:hover{transform:scale(1.2);text-shadow:0 0 10px #fff;}
+body.light .theme-toggle{color:#111;}
+h1{text-align:center;font-size:2.5rem;margin-bottom:0.5rem;text-shadow:0 0 10px rgba(255,255,255,0.2);}
+body.light h1{text-shadow:none;}
+p{text-align:center;color:#bbb;margin-bottom:2rem;font-size:1.2rem;}
+body.light p{color:#555;}
+.exercise-selector, .duration-selector{display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center;}
+button{padding:.6rem 1.5rem;font-size:1rem;font-weight:600;border:none;border-radius:30px;cursor:pointer;transition:.3s, transform 0.3s;}
+.exercise-selector button, .duration-selector button{background:#1c1f2a;color:#fff;box-shadow:0 4px 15px rgba(0,0,0,0.3);}
+body.light .exercise-selector button, body.light .duration-selector button{background:#ddd;color:#111;box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+button.active{background:#6C63FF;box-shadow:0 6px 20px rgba(108,99,255,0.5);transform:scale(1.05);}
+body.light button.active{background:#6C63FF;color:#fff;box-shadow:0 6px 20px rgba(108,99,255,0.5);}
+button:hover:not(.active){transform:scale(1.05);}
+.big-circle-container{position:relative;}
+.big-circle-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:240px;height:240px;border-radius:50%;background:rgba(108,99,255,0.2);filter:blur(30px);pointer-events:none;transition:background 0.3s;}
+body.light .big-circle-glow{background:rgba(108,99,255,0.1);}
+.big-circle{width:220px;height:220px;border-radius:50%;margin-bottom:2rem;display:flex;justify-content:center;align-items:center;position:relative;background:#1c1f2a;box-shadow:0 0 40px rgba(108,99,255,0.3);border:6px solid rgba(255,255,255,0.2);overflow:hidden;transition:transform 0.3s;}
+body.light .big-circle{background:#eee;border:6px solid rgba(0,0,0,0.1);}
+.big-circle:hover{transform:scale(1.05);}
+.circle-text{position:absolute;font-size:1.5rem;font-weight:700;color:#fff;text-align:center;text-shadow:0 0 10px rgba(255,255,255,0.2);}
+body.light .circle-text{color:#111;text-shadow:none;}
+.wave{position:absolute;bottom:0;width:200%;height:200%;border-radius:50%;opacity:0.5;transform:translateY(100%);}
+#startBtn,#stopBtn{padding:.8rem 2rem;font-size:1.1rem;font-weight:600;border:none;border-radius:30px;cursor:pointer;transition:.3s, transform 0.2s;margin-bottom:1rem;}
+#startBtn{background:#6C63FF;color:#fff;box-shadow:0 5px 20px rgba(108,99,255,0.4);}
+#startBtn:hover{background:#584ddb;box-shadow:0 6px 25px rgba(108,99,255,0.6);transform:scale(1.05);}
+#stopBtn{background:#ff4d4f;color:#fff;box-shadow:0 5px 20px rgba(255,77,79,0.4);}
+#stopBtn:hover{background:#d63c3f;box-shadow:0 6px 25px rgba(255,77,79,0.6);transform:scale(1.05);}
+.timer{font-size:1.5rem;margin-top:1rem;font-weight:700;color:#e0e0e0;text-shadow:0 0 10px rgba(255,255,255,0.1);transition:color 0.4s;}
+body.light .timer{color:#111;text-shadow:none;}
+@media(max-width:500px){.big-circle{width:180px;height:180px;}.big-circle-glow{width:200px;height:200px;}.circle-text{font-size:1.2rem;}#startBtn,#stopBtn{width:100%;}}
+#particleCanvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">UNDO</div>
+  <nav class="menu">
+    <div class="menu-item" onclick="window.location.href='dashboard.html'">Dashboard</div>
+    <div class="menu-item" onclick="window.location.href='breathing.html'">Breathing</div>
+    <div class="menu-item" onclick="window.location.href='analytics.html'">Analytics</div>
+    <div class="menu-item" onclick="window.location.href='achievements.html'">Achievements</div>
+    <div class="menu-item" onclick="window.location.href='settings.html'">Settings</div>
+  </nav>
+  <div class="theme-toggle" id="themeToggle">🌞</div>
+</header>
+
+<h1>Breathing Exercise</h1>
+<p>Select an exercise and session duration.</p>
+
+<div class="exercise-selector">
+  <button data-ex="wimhof" class="active">Wim Hof</button>
+  <button data-ex="box">Box Breathing</button>
+  <button data-ex="478">4-7-8</button>
+</div>
+
+<div class="duration-selector">
+  <button data-min="3" class="active">3 min</button>
+  <button data-min="5">5 min</button>
+  <button data-min="10">10 min</button>
+  <button data-min="15">15 min</button>
+  <button data-min="20">20 min</button>
+</div>
+
+<div class="big-circle-container">
+  <div class="big-circle-glow" id="circleGlow"></div>
+  <div class="big-circle" id="breathingCircle">
+    <canvas id="particleCanvas"></canvas>
+    <div class="circle-text" id="circleText">Ready</div>
+    <div class="wave wave1" id="wave1"></div>
+    <div class="wave wave2" id="wave2"></div>
+    <div class="wave wave3" id="wave3"></div>
+  </div>
+</div>
+
+<button id="startBtn">Start Breathing</button>
+<button id="stopBtn">Stop</button>
+<div class="timer" id="timer">00:00</div>
+
+<script>
+// ===== Dark/Light Mode =====
+const themeToggle=document.getElementById('themeToggle');
+if(localStorage.getItem('theme')==='light') document.body.classList.add('light'),themeToggle.textContent='🌙';
+themeToggle.addEventListener('click',()=>{
+  document.body.classList.toggle('light');
+  themeToggle.textContent=document.body.classList.contains('light')?'🌙':'🌞';
+  localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');
+});
+
+// ===== Particle Canvas =====
+const particleCanvas=document.getElementById('particleCanvas');
+const ctx=particleCanvas.getContext('2d');
+function resizeCanvas(){particleCanvas.width=particleCanvas.offsetWidth;particleCanvas.height=particleCanvas.offsetHeight;}
+resizeCanvas(); window.addEventListener('resize',resizeCanvas);
+const particles=[];
+function addParticle(x,y,color){particles.push({x,y,alpha:1,radius:Math.random()*2+1,vx:(Math.random()-0.5)*0.5,vy:(Math.random()-0.5)*0.5,color});}
+function updateParticles(){
+  ctx.clearRect(0,0,particleCanvas.width,particleCanvas.height);
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.alpha-=0.02;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.radius,0,2*Math.PI);
+    ctx.fillStyle=`rgba(${p.color.r},${p.color.g},${p.color.b},${p.alpha})`; ctx.fill();
+    if(p.alpha<=0) particles.splice(i,1);
+  }
+}
+
+// ===== Exercises & Durations =====
+const exercises={wimhof:[4,4,4],box:[4,4,4,4],'478':[4,7,8]};
+const phaseLabels=['Inhale','Hold','Exhale','Hold'];
+let currentExercise='wimhof', sessionMinutes=3, startTime=null, totalSeconds=0, requestId=null;
+
+const startBtn=document.getElementById('startBtn');
+const stopBtn=document.getElementById('stopBtn');
+const circleText=document.getElementById('circleText');
+const timerDisplay=document.getElementById('timer');
+const buttons=document.querySelectorAll('.exercise-selector button');
+const durationButtons=document.querySelectorAll('.duration-selector button');
+const wave1=document.getElementById('wave1');
+const wave2=document.getElementById('wave2');
+const wave3=document.getElementById('wave3');
+const circleGlow=document.getElementById('circleGlow');
+
+// ===== Selection Logic =====
+buttons.forEach(btn=>btn.addEventListener('click',()=>{buttons.forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentExercise=btn.dataset.ex;resetSession();}));
+durationButtons.forEach(btn=>btn.addEventListener('click',()=>{durationButtons.forEach(b=>b.classList.remove('active'));btn.classList.add('active');sessionMinutes=parseInt(btn.dataset.min);resetSession();}));
+
+// ===== Reset =====
+function resetSession(){cancelAnimationFrame(requestId); startTime=null; totalSeconds=0; timerDisplay.textContent='00:00'; circleText.textContent='Ready';
+  wave1.style.setProperty('--waveY','100%'); wave2.style.setProperty('--waveY','100%'); wave3.style.setProperty('--waveY','100%');
+  wave1.style.setProperty('--waveScale','1'); wave2.style.setProperty('--waveScale','1'); wave3.style.setProperty('--waveScale','1');
+  startBtn.disabled=false; particles.length=0; circleGlow.style.transform='translate(-50%,-50%) scale(1)';
+}
+
+// ===== Confetti =====
+function confettiCelebration(){const duration=3000, animationEnd=Date.now()+duration; const defaults={startVelocity:30,spread:360,ticks:60,zIndex:1000};
+  function randomInRange(min,max){return Math.random()*(max-min)+min;}
+  (function frame(){confetti({...defaults, particleCount:5, origin:{x:Math.random(), y:Math.random()*0.6}});
+    confetti({...defaults, particleCount:3, origin:{x:Math.random(), y:Math.random()*0.3}, scalar:randomInRange(0.6,1.2)});
+    if(Date.now()<animationEnd) requestAnimationFrame(frame);
+  })();
+}
+
+// ===== Animate Breathing =====
+function animateBreathing(timestamp){
+  if(!startTime) startTime=timestamp;
+  const elapsed=(timestamp-startTime)/1000;
+  totalSeconds=Math.floor(elapsed);
+  timerDisplay.textContent=String(Math.floor(totalSeconds/60)).padStart(2,'0')+":"+String(totalSeconds%60).padStart(2,'0');
+
+  const pattern=exercises[currentExercise];
+  const cycleTime=pattern.reduce((a,b)=>a+b,0);
+  let timeInCycle=elapsed%cycleTime;
+
+  let phase=0,sum=0;
+  for(let i=0;i<pattern.length;i++){sum+=pattern[i]; if(timeInCycle<=sum){phase=i;break;}}
+  circleText.textContent=phaseLabels[phase]||'';
+  let phaseStart=sum-pattern[phase]; let progress=(timeInCycle-phaseStart)/pattern[phase];
+
+  // ===== Wave Animation with dynamic shimmer =====
+  const waveLevel=(phase===0)?100-(Math.sin(progress*Math.PI/2)*40):(phase===2)?60+(Math.sin(progress*Math.PI/2)*40):60;
+  const waveScale=(phase===0)?1+progress*0.15:(phase===2)?1.15-progress*0.15:1;
+  const colorShift = Math.sin(elapsed*2)*30; // dynamic shimmer
+  const grad1=`rgb(${108+colorShift},${99+colorShift},${255})`;
+  const grad2=`rgb(${167+colorShift},${118+colorShift},${255})`;
+  const grad3=`rgb(${62+colorShift},${160+colorShift},${255})`;
+  wave1.style.setProperty('--waveY',waveLevel+'%'); wave1.style.setProperty('--waveScale',waveScale); wave1.style.background=`linear-gradient(135deg,${grad1},${grad2})`;
+  wave2.style.setProperty('--waveY',waveLevel+'%'); wave2.style.setProperty('--waveScale',waveScale); wave2.style.background=`linear-gradient(135deg,${grad2},${grad3})`;
+  wave3.style.setProperty('--waveY',waveLevel+'%'); wave3.style.setProperty('--waveScale',waveScale); wave3.style.background=`linear-gradient(135deg,${grad3},${grad1})`;
+
+  // Glow pulse behind circle
+  const scaleGlow = 1 + 0.05*Math.sin(progress*Math.PI); 
+  circleGlow.style.transform=`translate(-50%,-50%) scale(${scaleGlow})`;
+
+  // Particle trail along circle
+  const rect=document.getElementById('breathingCircle').getBoundingClientRect();
+  const centerX=rect.width/2, centerY=rect.height/2, radius=rect.width/2-10;
+  const angle=(elapsed%cycleTime)/cycleTime*2*Math.PI;
+  const x=centerX+radius*Math.cos(angle), y=centerY+radius*Math.sin(angle);
+  addParticle(x,y,{r:108,g:99,b:255});
+
+  updateParticles();
+
+  if(totalSeconds>=sessionMinutes*60){cancelAnimationFrame(requestId); confettiCelebration(); resetSession(); return;}
+  requestId=requestAnimationFrame(animateBreathing);
+}
+
+startBtn.addEventListener('click',()=>{startBtn.disabled=true; requestId=requestAnimationFrame(animateBreathing);});
+stopBtn.addEventListener('click',()=>{resetSession();});
+</script>
+</body>
+</html>

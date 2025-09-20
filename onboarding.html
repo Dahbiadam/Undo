@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UNDO - Onboarding</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #00c896;
+  --bg-dark: #0d0d0d;
+  --bg-light: #f9f9f9;
+  --text-dark: #222;
+  --text-light: #f5f5f5;
+}
+body {margin:0;padding:0;font-family:'Inter',sans-serif;transition:background 0.4s,color 0.4s;}
+body.dark {background: var(--bg-dark); color: var(--text-light);}
+body.light {background: var(--bg-light); color: var(--text-dark);}
+header{display:flex;justify-content:space-between;align-items:center;padding:1rem;}
+.logo{font-weight:700;font-size:1.5rem;color:var(--primary);}
+#themeToggle{cursor:pointer;font-size:1.5rem;}
+.container{max-width:500px;margin:2rem auto;padding:1rem;}
+h1{margin-bottom:1rem;text-align:center;}
+.step{display:none;flex-direction:column;gap:0.5rem;}
+.step.active{display:flex;}
+label{font-weight:600;}
+input,input[type=text],select,textarea{padding:0.5rem;border-radius:5px;border:1px solid #aaa;width:100%;}
+textarea{resize:none;}
+button{padding:0.6rem 1rem;background:var(--primary);border:none;color:#fff;border-radius:5px;cursor:pointer;transition:0.3s;}
+button:hover{opacity:0.9;}
+.error{color:red;font-size:0.9rem;height:1.2rem;}
+.success{color:green;font-size:0.9rem;height:1.2rem;}
+.progress-bar-container{width:100%;height:10px;background:#222;border-radius:5px;margin:1rem 0;overflow:hidden;}
+.progress-bar{height:100%;width:0%;background:var(--primary);transition:width 0.3s;}
+.toggle-link{cursor:pointer;color:var(--primary);text-align:center;margin-top:0.5rem;text-decoration:underline;font-size:0.9rem;}
+</style>
+</head>
+<body class="dark">
+
+<header>
+  <div class="logo">UNDO</div>
+  <div id="themeToggle">🌞</div>
+</header>
+
+<div class="container">
+  <h1>Welcome to UNDO</h1>
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Step 0: Login / Signup choice -->
+  <div class="step active" data-step="0">
+    <button id="signupBtnStart">Sign Up</button>
+    <button id="loginBtnStart">Log In</button>
+  </div>
+
+  <!-- Step 1: Signup basic info -->
+  <div class="step" data-step="1">
+    <label for="signupUsername">Username</label>
+    <input id="signupUsername" type="text" placeholder="3-20 letters/numbers/_-">
+    <label for="signupPassword">Password</label>
+    <input id="signupPassword" type="password" placeholder="At least 6 characters">
+    <label for="addictionSelect">What habit do you want to quit?</label>
+    <select id="addictionSelect">
+      <option>Smoking</option>
+      <option>Scrolling</option>
+      <option>Sugar</option>
+      <option>Other</option>
+    </select>
+    <button id="nextBtn1">Next</button>
+    <div class="error" id="error1"></div>
+  </div>
+
+  <!-- Step 2: Frequency and impact -->
+  <div class="step" data-step="2">
+    <label>How often do you do this habit?</label>
+    <select id="habitFrequency">
+      <option>Daily</option>
+      <option>Weekly</option>
+      <option>Occasionally</option>
+    </select>
+
+    <label>Do you lose money or resources because of it?</label>
+    <select id="habitImpact">
+      <option>No</option>
+      <option>Yes</option>
+    </select>
+    <label id="impactAmountLabel" style="display:none;">How much per day/week?</label>
+    <input id="impactAmount" type="text" placeholder="Amount lost" style="display:none;">
+    <button id="nextBtn2">Next</button>
+    <div class="error" id="error2"></div>
+  </div>
+
+  <!-- Step 3: Motivation and feelings -->
+  <div class="step" data-step="3">
+    <label>Why do you want to stop this habit?</label>
+    <textarea id="habitMotivation" rows="3"></textarea>
+    <label>How do you feel after doing it?</label>
+    <select id="habitFeeling">
+      <option>Sad</option>
+      <option>Guilty</option>
+      <option>Anxious</option>
+      <option>Neutral</option>
+      <option>Happy</option>
+    </select>
+    <label>Set your goal (days clean):</label>
+    <input id="goalDays" type="number" min="1" max="365" value="30">
+    <button id="finishBtn">Finish</button>
+    <div class="error" id="error3"></div>
+  </div>
+
+  <!-- Step 4: Login for existing users -->
+  <div class="step" data-step="4">
+    <label>Username</label>
+    <input id="loginUsername" type="text">
+    <label>Password</label>
+    <input id="loginPassword" type="password">
+    <button id="loginFinalBtn">Log In</button>
+    <div class="error" id="loginError"></div>
+  </div>
+
+</div>
+
+<script>
+const steps = document.querySelectorAll('.step');
+const progressBar = document.getElementById('progressBar');
+
+let userData = {};
+
+// Dark/light toggle
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('theme') || 'dark';
+document.body.className = savedTheme;
+themeToggle.textContent = savedTheme==='dark'?'🌞':'🌙';
+themeToggle.addEventListener('click',()=>{
+  const isLight = document.body.classList.toggle('light');
+  document.body.classList.toggle('dark',!isLight);
+  localStorage.setItem('theme', isLight?'light':'dark');
+  themeToggle.textContent = isLight?'🌙':'🌞';
+});
+
+// Helper to show step
+function showStep(n){
+  steps.forEach(s=>s.classList.remove('active'));
+  const step = document.querySelector(`.step[data-step="${n}"]`);
+  if(step) step.classList.add('active');
+  progressBar.style.width = ((n)/ (steps.length-1))*100 + '%';
+}
+
+// Step 0 buttons
+document.getElementById('signupBtnStart').addEventListener('click',()=>showStep(1));
+document.getElementById('loginBtnStart').addEventListener('click',()=>showStep(4));
+
+// Step 1: Signup validation
+document.getElementById('nextBtn1').addEventListener('click',()=>{
+  const u = document.getElementById('signupUsername').value.trim();
+  const p = document.getElementById('signupPassword').value;
+  const addiction = document.getElementById('addictionSelect').value;
+  const err = document.getElementById('error1');
+  err.textContent='';
+  if(!/^[a-z0-9_-]{3,20}$/i.test(u)){err.textContent='Username must be 3-20 letters/numbers/_/-';return;}
+  if(!p || p.length<6){err.textContent='Password must be 6+ characters';return;}
+  userData.username = u;
+  userData.password = p;
+  userData.addiction = addiction;
+  showStep(2);
+});
+
+// Step 2: Frequency & impact
+const impactSelect = document.getElementById('habitImpact');
+impactSelect.addEventListener('change',()=>{
+  const val = impactSelect.value;
+  document.getElementById('impactAmount').style.display = val==='Yes'?'block':'none';
+  document.getElementById('impactAmountLabel').style.display = val==='Yes'?'block':'none';
+});
+document.getElementById('nextBtn2').addEventListener('click',()=>{
+  const freq = document.getElementById('habitFrequency').value;
+  const impact = document.getElementById('habitImpact').value;
+  const amt = document.getElementById('impactAmount').value.trim();
+  const err = document.getElementById('error2'); err.textContent='';
+  if(impact==='Yes' && !amt){err.textContent='Please enter amount lost'; return;}
+  userData.frequency = freq;
+  userData.impact = impact==='Yes'?amt:0;
+  showStep(3);
+});
+
+// Step 3: Motivation & feelings
+document.getElementById('finishBtn').addEventListener('click',()=>{
+  const motivation = document.getElementById('habitMotivation').value.trim();
+  const feeling = document.getElementById('habitFeeling').value;
+  const goal = parseInt(document.getElementById('goalDays').value,10);
+  const err = document.getElementById('error3'); err.textContent='';
+  if(!motivation){err.textContent='Please enter your motivation'; return;}
+  if(!goal || goal<1){err.textContent='Goal must be at least 1 day'; return;}
+  userData.motivation = motivation;
+  userData.feeling = feeling;
+  userData.goalDays = goal;
+  userData.startTime = Date.now();
+  // Save to localStorage
+  const users = JSON.parse(localStorage.getItem('users')||'{}');
+  users[userData.username] = userData;
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem('user', JSON.stringify({username:userData.username}));
+  alert('Onboarding complete! Redirecting to Dashboard...');
+  window.location.href='dashboard.html';
+});
+
+// Step 4: Login
+document.getElementById('loginFinalBtn').addEventListener('click',()=>{
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError'); err.textContent='';
+  if(!u || !p){err.textContent='Fill all fields'; return;}
+  const users = JSON.parse(localStorage.getItem('users')||'{}');
+  if(users[u] && users[u].password===p){
+    localStorage.setItem('user', JSON.stringify({username:u}));
+    alert('Login successful! Redirecting...');
+    window.location.href='dashboard.html';
+  }else{err.textContent='Invalid credentials';}
+});
+</script>
+</body>
+</html>
