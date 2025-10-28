@@ -134,6 +134,34 @@
   .stat-box.red { background: linear-gradient(135deg,#fecaca,#fca5a5); }
   .dark .stat-box { background: rgba(255,255,255,0.05); }
 
+  .discord-banner {
+    background: linear-gradient(135deg, #5865F2, #7289DA);
+    color: white;
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 30px rgba(88,101,242,0.3);
+    transition: transform 0.2s;
+  }
+  .discord-banner:hover { transform: translateY(-2px); }
+  .discord-btn {
+    background: white;
+    color: #5865F2;
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  .discord-btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
   .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; }
   .section-title { display:flex; align-items:center; gap:0.75rem; }
 
@@ -160,9 +188,104 @@
 
   @media (max-width: 640px) { #header-buttons { display:none !important; } #btn-burger { display:inline-flex !important; } }
 
-  #mobile-menu-overlay { position: fixed; inset: 0; background: rgba(2,6,23,0.9); display: none; z-index: 120; align-items: center; justify-content: center; color: white; }
+  #mobile-menu-overlay { 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(0,0,0,0.5); 
+    backdrop-filter: blur(8px);
+    display: none; 
+    z-index: 120; 
+    align-items: flex-start; 
+    justify-content: flex-end;
+    padding: 0;
+  }
   #mobile-menu-overlay.show { display:flex; }
-  #mobile-menu-overlay .menu-grid { display:grid; grid-template-columns:1fr; gap:1rem; text-align:center; font-size:2rem; }
+  
+  #mobile-menu-panel {
+    width: 280px;
+    height: 100vh;
+    background: linear-gradient(180deg, #2c3e50 0%, #1a1f2e 100%);
+    box-shadow: -5px 0 30px rgba(0,0,0,0.3);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  #mobile-menu-overlay.show #mobile-menu-panel {
+    transform: translateX(0);
+  }
+  
+  .mobile-menu-header {
+    padding: 2rem 1.5rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .mobile-user-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+  }
+  
+  .mobile-menu-nav {
+    flex: 1;
+    padding: 1rem 0;
+  }
+  
+  .mobile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    color: rgba(255,255,255,0.8);
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .mobile-menu-item:hover,
+  .mobile-menu-item.active {
+    background: rgba(124,58,237,0.15);
+    color: white;
+  }
+  
+  .mobile-menu-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--accent-from), var(--accent-to));
+  }
+  
+  .mobile-menu-icon {
+    font-size: 1.25rem;
+    width: 24px;
+    text-align: center;
+  }
+  
+  .mobile-menu-badge {
+    margin-left: auto;
+    background: var(--danger);
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+  
+  .mobile-menu-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
 
   #emergency-overlay { position: fixed; inset: 0; background: linear-gradient(180deg, rgba(220,38,38,0.98), rgba(153,27,27,0.95)); display: none; z-index: 200; color: white; align-items: center; justify-content: center; padding: 1.25rem; }
   #emergency-overlay.show { display:flex; }
@@ -250,6 +373,24 @@
 
     <section id="app-main" style="display:none">
       <div id="dashboard-view">
+        <!-- Discord Community Banner -->
+        <a href="https://discord.gg/G93mYyyzYJ" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:block">
+          <div class="discord-banner">
+            <div style="font-size:2rem;margin-bottom:0.5rem">💬</div>
+            <div style="font-size:1.5rem;font-weight:800;margin-bottom:0.5rem">Join Our Community!</div>
+            <div style="margin-bottom:1rem;opacity:0.95">Connect with others on their journey. Share wins, get support, stay motivated.</div>
+            <div class="discord-btn" style="display:inline-flex">
+              <svg width="24" height="24" viewBox="0 0 71 55" fill="currentColor">
+                <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
+              </svg>
+              Join Discord Server
+            </div>
+            <div style="margin-top:0.75rem;font-size:0.875rem;opacity:0.85">
+              <span style="font-weight:700">🔥 Live now:</span> Daily challenges, accountability partners & expert tips
+            </div>
+          </div>
+        </a>
+
         <div class="cols">
           <div>
             <div class="section-header">
@@ -560,14 +701,45 @@
   </div>
 
   <div id="mobile-menu-overlay" role="dialog" aria-hidden="true">
-    <div class="menu-grid">
-      <button class="btn btn-ghost" id="m-btn-home" title="Go Home">🏠</button>
-      <button class="btn btn-ghost" id="m-btn-breathe" title="Breathing">🌬️</button>
-      <button class="btn btn-ghost" id="m-btn-why" title="Why">📝</button>
-      <button class="btn btn-ghost" id="m-btn-analytics" title="Analytics">📊</button>
-      <button class="btn btn-ghost" id="m-btn-leaderboard" title="Leaderboard">🏆</button>
-      <button class="btn btn-ghost" id="m-btn-dark" title="Toggle Mode">☀️</button>
-     </div>
+    <div id="mobile-menu-panel">
+      <div class="mobile-menu-header">
+        <div class="mobile-user-name" id="mobile-user-name">Hey Friend!</div>
+      </div>
+      
+      <div class="mobile-menu-nav">
+        <button class="mobile-menu-item active" id="m-btn-home">
+          <span class="mobile-menu-icon">🏠</span>
+          <span>Dashboard</span>
+        </button>
+        
+        <button class="mobile-menu-item" id="m-btn-analytics">
+          <span class="mobile-menu-icon">📊</span>
+          <span>Analytics</span>
+        </button>
+        
+        <button class="mobile-menu-item" id="m-btn-leaderboard">
+          <span class="mobile-menu-icon">🏆</span>
+          <span>Leaderboard</span>
+        </button>
+        
+        <button class="mobile-menu-item" id="m-btn-breathe">
+          <span class="mobile-menu-icon">🌬️</span>
+          <span>Breathwork</span>
+        </button>
+        
+        <button class="mobile-menu-item" id="m-btn-why">
+          <span class="mobile-menu-icon">📝</span>
+          <span>Why I Relapsed</span>
+        </button>
+      </div>
+      
+      <div class="mobile-menu-footer">
+        <button class="mobile-menu-item" id="m-btn-dark">
+          <span class="mobile-menu-icon">🌙</span>
+          <span>Dark Mode</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div id="emergency-overlay" role="alert" aria-hidden="true">
@@ -781,6 +953,50 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const msg = messages[days] || `🎯 ${days} days clean!`;
     showNotification(msg, 5000);
+
+    // Show Discord invite on major milestones
+    if ([7, 30, 90].includes(days)) {
+      setTimeout(() => {
+        showDiscordMilestoneModal(days, habitName);
+      }, 3000);
+    }
+  }
+
+  function showDiscordMilestoneModal(days, habitName) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay show';
+    modal.style.display = 'flex';
+    modal.style.zIndex = '100';
+    
+    modal.innerHTML = `
+      <div class="modal card show" style="max-width:500px;text-align:center">
+        <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
+        <h3 class="heading" style="font-size:1.75rem;margin-bottom:1rem">${days} Days Achievement!</h3>
+        <p style="margin-bottom:1.5rem;font-size:1.125rem">You've reached ${days} days clean from ${habitName}! This is incredible progress.</p>
+        
+        <div class="discord-banner" style="margin-bottom:1rem">
+          <div style="font-size:1.25rem;font-weight:700;margin-bottom:0.5rem">🌟 Celebrate with the Community!</div>
+          <div style="margin-bottom:1rem;font-size:0.95rem">Share your win, inspire others, and get support from people who understand your journey.</div>
+          <a href="https://discord.gg/G93mYyyzYJ" target="_blank" class="discord-btn" onclick="this.closest('.modal-overlay').remove()">
+            <svg width="20" height="20" viewBox="0 0 71 55" fill="currentColor">
+              <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
+            </svg>
+            Join Discord & Share Your Win
+          </a>
+        </div>
+        
+        <button class="btn btn-ghost btn-wide" onclick="this.closest('.modal-overlay').remove()">
+          Maybe Later
+        </button>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Auto-remove after 30 seconds if not interacted with
+    setTimeout(() => {
+      if (modal.parentNode) modal.remove();
+    }, 30000);
   }
 
   const desktopHome = document.getElementById("btn-home");
@@ -1933,9 +2149,51 @@ document.addEventListener("DOMContentLoaded", function() {
           saveState();
           renderAll();
           maybeSyncSoon();
+          
+          // Show Discord invite after onboarding
+          setTimeout(() => {
+            showWelcomeDiscordModal();
+          }, 2000);
         }
       }, 1500);
     }
+  }
+
+  function showWelcomeDiscordModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay show';
+    modal.style.display = 'flex';
+    modal.style.zIndex = '100';
+    
+    modal.innerHTML = `
+      <div class="modal card show" style="max-width:500px;text-align:center">
+        <div style="font-size:3rem;margin-bottom:1rem">👋</div>
+        <h3 class="heading" style="font-size:1.75rem;margin-bottom:1rem">Welcome to UNDO!</h3>
+        <p style="margin-bottom:1.5rem;font-size:1.125rem">You're not alone on this journey. Thousands are using UNDO to transform their lives.</p>
+        
+        <div class="discord-banner" style="margin-bottom:1rem">
+          <div style="font-size:1.25rem;font-weight:700;margin-bottom:0.5rem">💬 Join Our Community</div>
+          <div style="margin-bottom:1rem;font-size:0.95rem">
+            ✅ Get daily motivation & accountability<br>
+            ✅ Share wins and challenges<br>
+            ✅ Connect with people who understand<br>
+            ✅ Access expert tips & resources
+          </div>
+          <a href="https://discord.gg/G93mYyyzYJ" target="_blank" class="discord-btn" onclick="this.closest('.modal-overlay').remove()">
+            <svg width="20" height="20" viewBox="0 0 71 55" fill="currentColor">
+              <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
+            </svg>
+            Join Free Discord Community
+          </a>
+        </div>
+        
+        <button class="btn btn-ghost btn-wide" onclick="this.closest('.modal-overlay').remove()">
+          Start My Journey
+        </button>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
   }
 
   function openAddModal(type){
@@ -2364,52 +2622,105 @@ document.addEventListener("DOMContentLoaded", function() {
         mobileOverlay.classList.toggle('show');
         if(mobileOverlay.classList.contains('show')) {
           mobileOverlay.setAttribute('aria-hidden', 'false');
+          document.body.style.overflow = 'hidden';
         } else {
           mobileOverlay.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
         }
       });
 
+      // Close when clicking overlay background
       mobileOverlay.addEventListener('click', (e) => {
         if(e.target === mobileOverlay) {
           mobileOverlay.classList.remove('show');
           mobileOverlay.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
         }
       });
+
+      // Update user info in mobile menu
+      function updateMobileUserInfo() {
+        const mobileUserName = document.getElementById('mobile-user-name');
+        
+        if (mobileUserName) {
+          const name = state.userData.name || 'Friend';
+          mobileUserName.textContent = `Hey ${name}!`;
+        }
+      }
+
+      // Call on state changes
+      const originalRenderAll = renderAll;
+      renderAll = function() {
+        originalRenderAll();
+        updateMobileUserInfo();
+      };
+
+      // Set active menu item
+      function setActiveMobileMenuItem(page) {
+        document.querySelectorAll('.mobile-menu-item').forEach(item => {
+          item.classList.remove('active');
+        });
+        
+        const pageMap = {
+          'dashboard': 'm-btn-home',
+          'analytics': 'm-btn-analytics',
+          'leaderboard': 'm-btn-leaderboard',
+          'breathing': 'm-btn-breathe',
+          'why': 'm-btn-why'
+        };
+        
+        const activeBtn = document.getElementById(pageMap[page]);
+        if (activeBtn) activeBtn.classList.add('active');
+      }
 
       document.getElementById('m-btn-home').addEventListener('click', ()=> { 
         mobileOverlay.classList.remove('show'); 
         mobileOverlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
         state.page='dashboard'; 
+        setActiveMobileMenuItem('dashboard');
         renderAll(); 
       });
       document.getElementById('m-btn-breathe').addEventListener('click', ()=> { 
         mobileOverlay.classList.remove('show'); 
         mobileOverlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
         state.page='breathing';
+        setActiveMobileMenuItem('breathing');
         renderAll();
       });
       document.getElementById('m-btn-why').addEventListener('click', ()=> { 
         mobileOverlay.classList.remove('show'); 
         mobileOverlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
         state.page='why'; 
+        setActiveMobileMenuItem('why');
         renderAll(); 
       });
       document.getElementById('m-btn-analytics').addEventListener('click', ()=> { 
         mobileOverlay.classList.remove('show'); 
         mobileOverlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
         state.page='analytics'; 
+        setActiveMobileMenuItem('analytics');
         renderAll(); 
       });
       document.getElementById('m-btn-leaderboard').addEventListener('click', ()=> { 
         mobileOverlay.classList.remove('show'); 
         mobileOverlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
         state.page='leaderboard'; 
+        setActiveMobileMenuItem('leaderboard');
         renderAll(); 
       });
       document.getElementById('m-btn-dark').addEventListener('click', ()=> { 
         state.darkMode = !state.darkMode;
+        const icon = document.querySelector('#m-btn-dark .mobile-menu-icon');
+        if (icon) icon.textContent = state.darkMode ? '☀️' : '🌙';
         renderAll();
       });
+      
+      updateMobileUserInfo();
     }
   } catch(e){}
 
