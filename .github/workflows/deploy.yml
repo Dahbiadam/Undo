@@ -13,32 +13,65 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Debug - Check files
+      run: |
+        echo "📁 Current directory structure:"
+        ls -la
+        echo "📄 Checking if index.html exists:"
+        if [ -f "index.html" ]; then
+          echo "✅ index.html exists"
+          echo "📊 File size: $(wc -l < index.html) lines"
+          echo "🔍 Checking for placeholders:"
+          grep -o "{{.*}}" index.html | head -5
+        else
+          echo "❌ index.html not found!"
+          exit 1
+        fi
+
     - name: Build and Replace Secrets
       run: |
-        # Create a temporary file for processing
-        cp index.html index.temp.html
+        echo "🔄 Starting secret replacement..."
         
-        # Replace each placeholder individually
-        SUPABASE_URL="${{ secrets.SUPABASE_URL }}" && \
-        SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" && \
-        OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" && \
+        # Store secrets in variables
+        SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
+        SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+        OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}"
         
-        # Use a more robust replacement method
-        sed -i "s|{{SUPABASE_URL}}|$SUPABASE_URL|g" index.temp.html
-        sed -i "s|{{SUPABASE_ANON_KEY}}|$SUPABASE_ANON_KEY|g" index.temp.html  
-        sed -i "s|{{OPENROUTER_API_KEY}}|$OPENROUTER_API_KEY|g" index.temp.html
+        # Debug: Check if secrets are available (without showing full values)
+        echo "🔐 SUPABASE_URL available: ${#SUPABASE_URL} characters"
+        echo "🔐 SUPABASE_ANON_KEY available: ${#SUPABASE_ANON_KEY} characters"
+        echo "🔐 OPENROUTER_API_KEY available: ${#OPENROUTER_API_KEY} characters"
         
-        # Move the processed file back
-        mv index.temp.html index.html
+        # Create a backup
+        cp index.html index.html.backup
         
-        # Verify replacements worked
+        # Replace each placeholder one by one with proper escaping
+        echo "🔄 Replacing SUPABASE_URL..."
+        sed -i "s|{{SUPABASE_URL}}|$(echo "$SUPABASE_URL" | sed 's/[[\.*^$()+?{|]/\\&/g')|g" index.html
+        
+        echo "🔄 Replacing SUPABASE_ANON_KEY..."
+        sed -i "s|{{SUPABASE_ANON_KEY}}|$(echo "$SUPABASE_ANON_KEY" | sed 's/[[\.*^$()+?{|]/\\&/g')|g" index.html
+        
+        echo "🔄 Replacing OPENROUTER_API_KEY..."
+        sed -i "s|{{OPENROUTER_API_KEY}}|$(echo "$OPENROUTER_API_KEY" | sed 's/[[\.*^$()+?{|]/\\&/g')|g" index.html
+        
+        echo "✅ Replacement completed"
+
+    - name: Verify Replacements
+      run: |
+        echo "🔍 Verifying placeholder replacement..."
+        
+        # Check if any placeholders remain
         if grep -q "{{" index.html; then
           echo "❌ ERROR: Some placeholders were not replaced:"
-          grep "{{" index.html
+          grep -o "{{.*}}" index.html
+          echo "📋 Showing first 10 lines with placeholders:"
+          grep -n "{{" index.html | head -10
           exit 1
         else
-          echo "✅ SUCCESS: All placeholders replaced successfully"
-          echo "✅ Environment: openrouter"
+          echo "✅ SUCCESS: All placeholders replaced successfully!"
+          echo "📄 Sample of processed file:"
+          grep -A 2 -B 2 "const SUPABASE_URL" index.html || echo "⚠️  Could not find config section"
         fi
 
     - name: Deploy to GitHub Pages
@@ -46,3 +79,11 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./
+        keep_files: false
+
+    - name: Success Message
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "🌐 Your app should be live at: https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/"
+        echo "🔧 Environment: openrouter"
+        echo "✅ All secrets were properly injected"
