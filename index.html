@@ -1804,19 +1804,14 @@
 </div>
 
 <script>
-// ===== SUPABASE CONFIGURATION =====
-// These will be set from environment variables
-const SUPABASE_URL = window.ENV?.SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = window.ENV?.SUPABASE_ANON_KEY || '';
-const OPENROUTER_API_KEY = window.ENV?.OPENROUTER_API_KEY || '';
+// ===== ENVIRONMENT VARIABLES =====
+// These values will be injected from environment variables at build time
+const SUPABASE_URL = 'https://wtmvefqfzzhplcwpdtdk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0bXZlZnFmenpocGxjd3BkdGRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMTcwODgsImV4cCI6MjA3OTg5MzA4OH0.dUIPn_duNhzPGbuavEKXpFcyXnAHi50xC7vCAVtCqUw';
+const OPENROUTER_API_KEY = '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';
 
-// Initialize Supabase only if keys are available
-let supabase = null;
-if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} else {
-  console.warn('Supabase configuration missing. Please set SUPABASE_URL and SUPABASE_ANON_KEY environment variables.');
-}
+// Initialize Supabase
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ===== 10/10 ENHANCEMENTS =====
 
@@ -1977,11 +1972,6 @@ class SmartCoach {
     const prompt = this.buildContextualPrompt(message);
     
     try {
-      // Check if OpenRouter API key is available
-      if (!OPENROUTER_API_KEY) {
-        return this.getFallbackResponse(message);
-      }
-      
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -2078,8 +2068,6 @@ class ImplementationIntentions {
       responses: responses,
       created_at: new Date().toISOString()
     };
-    
-    if (!supabase) return null;
     
     const { data, error } = await supabase
       .from('implementation_plans')
@@ -2440,11 +2428,6 @@ function validateHabitForm(name, category) {
 
 // NEW: Enhanced Supabase operations
 async function safeSupabaseOperation(operation, errorMessage) {
-  if (!supabase) {
-    console.warn('Supabase not initialized');
-    return { data: null, error: new Error('Supabase not configured') };
-  }
-  
   return withErrorHandling(async () => {
     const result = await operation();
     if (result.error) throw new Error(result.error.message);
@@ -2622,10 +2605,6 @@ async function nextOnboardingStep() {
       setLoading(document.getElementById('btn-onboarding-next'), true);
       showNotification('Creating your account...');
       
-      if (!supabase) {
-        throw new Error('Database not configured. Please check your environment variables.');
-      }
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -2712,7 +2691,7 @@ async function createInitialHabits(userId, onboardingData) {
       });
     }
     
-    if (habits.length > 0 && supabase) {
+    if (habits.length > 0) {
       const { data, error } = await supabase
         .from('habits')
         .insert(habits)
@@ -2756,10 +2735,6 @@ async function handleLogin() {
     setLoading(document.getElementById('btn-login'), true);
     showNotification('Logging in...');
     
-    if (!supabase) {
-      throw new Error('Database not configured. Please check your environment variables.');
-    }
-    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -2793,10 +2768,6 @@ async function switchToMainApp() {
 async function loadUserData() {
   try {
     // Get user profile
-    if (!supabase) {
-      throw new Error('Supabase not configured');
-    }
-    
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -2860,10 +2831,6 @@ async function loadUserData() {
 
 async function loadHabits() {
   try {
-    if (!supabase) {
-      throw new Error('Supabase not configured');
-    }
-    
     const { data: quitHabits, error: quitError } = await supabase
       .from('habits')
       .select('*')
@@ -3123,7 +3090,7 @@ function toggleDarkMode() {
   }
   
   // Save preference
-  if (appState.profile && supabase) {
+  if (appState.profile) {
     supabase
       .from('profiles')
       .update({ dark_mode: appState.darkMode })
@@ -3136,11 +3103,6 @@ function toggleDarkMode() {
 
 async function logout() {
   if (confirm('Are you sure you want to log out?')) {
-    if (!supabase) {
-      showNotification('Error: Database not configured');
-      return;
-    }
-    
     const { error } = await supabase.auth.signOut();
     if (error) {
       showNotification('Error logging out: ' + error.message);
@@ -3360,22 +3322,20 @@ async function completeHabit(habitId) {
     const today = new Date().toISOString().split('T')[0];
     
     // Record completion
-    if (supabase) {
-      const { error: completionError } = await supabase
-        .from('habit_completions')
-        .insert([
-          {
-            habit_id: habitId,
-            user_id: appState.session.user.id,
-            completed_date: today,
-            completed_count: 1
-          }
-        ]);
-      
-      if (completionError) {
-        console.warn('Completions table might not exist:', completionError);
-        // Continue without error - this is a demo feature
-      }
+    const { error: completionError } = await supabase
+      .from('habit_completions')
+      .insert([
+        {
+          habit_id: habitId,
+          user_id: appState.session.user.id,
+          completed_date: today,
+          completed_count: 1
+        }
+      ]);
+    
+    if (completionError) {
+      console.warn('Completions table might not exist:', completionError);
+      // Continue without error - this is a demo feature
     }
     
     // Update habit stats
@@ -3384,24 +3344,17 @@ async function completeHabit(habitId) {
     const newBestStreak = Math.max(habit.best_streak || 0, newStreak);
     const newCompletions = (habit.total_completions || 0) + 1;
     
-    if (supabase) {
-      const { error: habitError } = await supabase
-        .from('habits')
-        .update({
-          current_streak: newStreak,
-          best_streak: newBestStreak,
-          total_completions: newCompletions
-        })
-        .eq('id', habitId);
-      
-      if (habitError) {
-        console.warn('Error updating habit:', habitError);
-        // Update local state only
-        habit.current_streak = newStreak;
-        habit.best_streak = newBestStreak;
-        habit.total_completions = newCompletions;
-      }
-    } else {
+    const { error: habitError } = await supabase
+      .from('habits')
+      .update({
+        current_streak: newStreak,
+        best_streak: newBestStreak,
+        total_completions: newCompletions
+      })
+      .eq('id', habitId);
+    
+    if (habitError) {
+      console.warn('Error updating habit:', habitError);
       // Update local state only
       habit.current_streak = newStreak;
       habit.best_streak = newBestStreak;
@@ -3432,16 +3385,14 @@ async function deleteHabit(habitId, type) {
   if (!confirm('Are you sure you want to delete this habit?')) return;
   
   try {
-    if (supabase) {
-      const { error } = await supabase
-        .from('habits')
-        .update({ is_active: false })
-        .eq('id', habitId);
-      
-      if (error) {
-        console.warn('Error deleting habit:', error);
-        // Remove from local state anyway
-      }
+    const { error } = await supabase
+      .from('habits')
+      .update({ is_active: false })
+      .eq('id', habitId);
+    
+    if (error) {
+      console.warn('Error deleting habit:', error);
+      // Remove from local state anyway
     }
     
     appState.habits[type] = appState.habits[type].filter(h => h.id !== habitId);
@@ -3463,25 +3414,17 @@ async function renderRiskAssessment() {
   
   try {
     // Get recent data for analysis
-    let recentCompletions = [];
-    let recentRelapses = [];
+    const { data: recentCompletions } = await supabase
+      .from('habit_completions')
+      .select('*')
+      .eq('user_id', appState.session.user.id)
+      .gte('completed_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
     
-    if (supabase) {
-      const { data: completionsData } = await supabase
-        .from('habit_completions')
-        .select('*')
-        .eq('user_id', appState.session.user.id)
-        .gte('completed_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-      
-      const { data: relapsesData } = await supabase
-        .from('habit_relapses')
-        .select('*')
-        .eq('user_id', appState.session.user.id)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-      
-      recentCompletions = completionsData || [];
-      recentRelapses = relapsesData || [];
-    }
+    const { data: recentRelapses } = await supabase
+      .from('habit_relapses')
+      .select('*')
+      .eq('user_id', appState.session.user.id)
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
     
     // Calculate risk level
     const riskLevel = HabitInsights.predictRisk(
@@ -3493,8 +3436,8 @@ async function renderRiskAssessment() {
     // Generate insights
     const insights = HabitInsights.generateInsights(
       [...appState.habits.quit, ...appState.habits.build],
-      recentCompletions,
-      recentRelapses
+      recentCompletions || [],
+      recentRelapses || []
     );
     
     let riskClass = 'low-risk';
@@ -3858,44 +3801,36 @@ async function awardXP(amount, type, description) {
     const newLevel = Math.floor(newXP / 100) + 1;
     const leveledUp = newLevel > appState.profile.level;
     
-    if (supabase) {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          xp: newXP,
-          level: newLevel,
-          streak: appState.profile.streak + 1,
-          best_streak: Math.max(appState.profile.best_streak, appState.profile.streak + 1)
-        })
-        .eq('id', appState.session.user.id);
-      
-      if (error) {
-        console.warn('Error updating profile:', error);
-        // Update local state only
-        appState.profile.xp = newXP;
-        appState.profile.level = newLevel;
-        appState.profile.streak += 1;
-        appState.profile.best_streak = Math.max(appState.profile.best_streak, appState.profile.streak);
-      }
-      
-      // Log XP transaction
-      await supabase
-        .from('xp_transactions')
-        .insert([
-          {
-            user_id: appState.session.user.id,
-            amount: amount,
-            type: type,
-            description: description
-          }
-        ]);
-    } else {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        xp: newXP,
+        level: newLevel,
+        streak: appState.profile.streak + 1,
+        best_streak: Math.max(appState.profile.best_streak, appState.profile.streak + 1)
+      })
+      .eq('id', appState.session.user.id);
+    
+    if (error) {
+      console.warn('Error updating profile:', error);
       // Update local state only
       appState.profile.xp = newXP;
       appState.profile.level = newLevel;
       appState.profile.streak += 1;
       appState.profile.best_streak = Math.max(appState.profile.best_streak, appState.profile.streak);
     }
+    
+    // Log XP transaction
+    await supabase
+      .from('xp_transactions')
+      .insert([
+        {
+          user_id: appState.session.user.id,
+          amount: amount,
+          type: type,
+          description: description
+        }
+      ]);
     
     updateXPDisplay();
     
@@ -3943,21 +3878,19 @@ async function awardBadge(badgeId) {
   if (!badge) return;
   
   try {
-    if (supabase) {
-      const { error } = await supabase
-        .from('user_badges')
-        .insert([
-          {
-            user_id: appState.session.user.id,
-            badge_id: badgeId,
-            awarded_at: new Date().toISOString()
-          }
-        ]);
-      
-      if (error) {
-        console.warn('Error awarding badge:', error);
-        // Award locally anyway for demo
-      }
+    const { error } = await supabase
+      .from('user_badges')
+      .insert([
+        {
+          user_id: appState.session.user.id,
+          badge_id: badgeId,
+          awarded_at: new Date().toISOString()
+        }
+      ]);
+    
+    if (error) {
+      console.warn('Error awarding badge:', error);
+      // Award locally anyway for demo
     }
     
     // Update local state
@@ -4097,42 +4030,40 @@ async function handleEmergencySuccess() {
 async function handleEmergencyRelapse() {
   if (appState.selectedHabit) {
     try {
-      if (supabase) {
-        const { error: relapseError } = await supabase
-          .from('habit_relapses')
-          .insert([
-            {
-              habit_id: appState.selectedHabit.id,
-              user_id: appState.session.user.id,
-              trigger_description: 'Used emergency button',
-              emotions: 'Urge overcame resistance',
-              learned: 'Need stronger coping strategies',
-              severity: 5
-            }
-          ]);
-        
-        if (relapseError) {
-          console.warn('Error logging relapse:', relapseError);
-        }
-        
-        // Update habit stats
-        const habit = appState.habits.quit.find(h => h.id === appState.selectedHabit.id);
-        const newRelapses = (habit.total_relapses || 0) + 1;
-        
-        const { error: habitError } = await supabase
-          .from('habits')
-          .update({
-            total_relapses: newRelapses,
-            current_streak: 0
-          })
-          .eq('id', appState.selectedHabit.id);
-        
-        if (habitError) {
-          console.warn('Error updating habit after relapse:', habitError);
-          // Update local state
-          habit.total_relapses = newRelapses;
-          habit.current_streak = 0;
-        }
+      const { error: relapseError } = await supabase
+        .from('habit_relapses')
+        .insert([
+          {
+            habit_id: appState.selectedHabit.id,
+            user_id: appState.session.user.id,
+            trigger_description: 'Used emergency button',
+            emotions: 'Urge overcame resistance',
+            learned: 'Need stronger coping strategies',
+            severity: 5
+          }
+        ]);
+      
+      if (relapseError) {
+        console.warn('Error logging relapse:', relapseError);
+      }
+      
+      // Update habit stats
+      const habit = appState.habits.quit.find(h => h.id === appState.selectedHabit.id);
+      const newRelapses = (habit.total_relapses || 0) + 1;
+      
+      const { error: habitError } = await supabase
+        .from('habits')
+        .update({
+          total_relapses: newRelapses,
+          current_streak: 0
+        })
+        .eq('id', appState.selectedHabit.id);
+      
+      if (habitError) {
+        console.warn('Error updating habit after relapse:', habitError);
+        // Update local state
+        habit.total_relapses = newRelapses;
+        habit.current_streak = 0;
       }
       
     } catch (error) {
@@ -4189,43 +4120,36 @@ async function confirmRelapse() {
   if (!habit) return;
 
   try {
-    if (supabase) {
-      const { error: relapseError } = await supabase
-        .from('habit_relapses')
-        .insert([
-          {
-            habit_id: habit.id,
-            user_id: appState.session.user.id,
-            trigger_description: note,
-            emotions: 'Urge overcame resistance',
-            learned: 'Will try different strategies next time',
-            severity: 5
-          }
-        ]);
-      
-      if (relapseError) {
-        console.warn('Error confirming relapse:', relapseError);
-      }
-      
-      // Update habit stats
-      const { error: habitError } = await supabase
-        .from('habits')
-        .update({
-          total_relapses: (habit.total_relapses || 0) + 1,
-          current_streak: 0,
-          start_date: new Date().toISOString()
-        })
-        .eq('id', habit.id);
-      
-      if (habitError) {
-        console.warn('Error updating habit after relapse:', habitError);
-        // Update local state
-        habit.total_relapses = (habit.total_relapses || 0) + 1;
-        habit.current_streak = 0;
-        habit.start_date = new Date().toISOString();
-      }
-    } else {
-      // Update local state only
+    const { error: relapseError } = await supabase
+      .from('habit_relapses')
+      .insert([
+        {
+          habit_id: habit.id,
+          user_id: appState.session.user.id,
+          trigger_description: note,
+          emotions: 'Urge overcame resistance',
+          learned: 'Will try different strategies next time',
+          severity: 5
+        }
+      ]);
+    
+    if (relapseError) {
+      console.warn('Error confirming relapse:', relapseError);
+    }
+    
+    // Update habit stats
+    const { error: habitError } = await supabase
+      .from('habits')
+      .update({
+        total_relapses: (habit.total_relapses || 0) + 1,
+        current_streak: 0,
+        start_date: new Date().toISOString()
+      })
+      .eq('id', habit.id);
+    
+    if (habitError) {
+      console.warn('Error updating habit after relapse:', habitError);
+      // Update local state
       habit.total_relapses = (habit.total_relapses || 0) + 1;
       habit.current_streak = 0;
       habit.start_date = new Date().toISOString();
@@ -4417,22 +4341,14 @@ async function loadLeaderboard() {
   
   try {
     // Get top users from Supabase
-    let profiles = [];
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('id, email, xp, level, streak')
+      .order('xp', { ascending: false })
+      .limit(10);
     
-    if (supabase) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, xp, level, streak')
-        .order('xp', { ascending: false })
-        .limit(10);
-      
-      if (error) {
-        throw new Error('Leaderboard data not available');
-      }
-      
-      profiles = data || [];
-    } else {
-      throw new Error('Supabase not configured');
+    if (error) {
+      throw new Error('Leaderboard data not available');
     }
     
     let html = '';
@@ -4531,7 +4447,7 @@ async function importData(event) {
       
       if (confirm('This will replace your current data. Continue?')) {
         // Import habits
-        if (data.habits && supabase) {
+        if (data.habits) {
           for (const habit of data.habits) {
             const { error } = await supabase
               .from('habits')
@@ -4547,7 +4463,7 @@ async function importData(event) {
         }
         
         // Import profile
-        if (data.profile && supabase) {
+        if (data.profile) {
           const { error } = await supabase
             .from('profiles')
             .update(data.profile)
@@ -4574,30 +4490,28 @@ async function clearAllData() {
   if (confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
     try {
       // Delete all habits
-      if (supabase) {
-        const { error: habitsError } = await supabase
-          .from('habits')
-          .delete()
-          .eq('user_id', appState.session.user.id);
-        
-        if (habitsError) {
-          console.warn('Error clearing habits:', habitsError);
-        }
-        
-        // Reset profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            xp: 0,
-            level: 1,
-            streak: 0,
-            best_streak: 0
-          })
-          .eq('id', appState.session.user.id);
-        
-        if (profileError) {
-          console.warn('Error resetting profile:', profileError);
-        }
+      const { error: habitsError } = await supabase
+        .from('habits')
+        .delete()
+        .eq('user_id', appState.session.user.id);
+      
+      if (habitsError) {
+        console.warn('Error clearing habits:', habitsError);
+      }
+      
+      // Reset profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          xp: 0,
+          level: 1,
+          streak: 0,
+          best_streak: 0
+        })
+        .eq('id', appState.session.user.id);
+      
+      if (profileError) {
+        console.warn('Error resetting profile:', profileError);
       }
       
       // Clear local state
@@ -4916,28 +4830,24 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btn-login').addEventListener('click', handleLogin);
   
   // Check for existing session
-  if (supabase) {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        appState.session = session;
-        switchToMainApp();
-      }
-    });
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      appState.session = session;
+      switchToMainApp();
+    }
+  });
 
-    // Listen for auth changes
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        appState.session = session;
-        switchToMainApp();
-      } else if (event === 'SIGNED_OUT') {
-        document.getElementById('main-app-container').style.display = 'none';
-        document.getElementById('auth-app').style.display = 'block';
-        showAuthPage('welcome-screen');
-      }
-    });
-  } else {
-    console.warn('Supabase not configured. Authentication features disabled.');
-  }
+  // Listen for auth changes
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      appState.session = session;
+      switchToMainApp();
+    } else if (event === 'SIGNED_OUT') {
+      document.getElementById('main-app-container').style.display = 'none';
+      document.getElementById('auth-app').style.display = 'block';
+      showAuthPage('welcome-screen');
+    }
+  });
 });
 
 // Make functions available globally for onclick handlers
