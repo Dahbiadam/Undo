@@ -80,10 +80,3 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./
         keep_files: false
-
-    - name: Success Message
-      run: |
-        echo "🎉 Deployment completed successfully!"
-        echo "🌐 Your app should be live at: https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/"
-        echo "🔧 Environment: openrouter"
-        echo "✅ All secrets were properly injected"
